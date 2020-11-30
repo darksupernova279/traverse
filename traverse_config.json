@@ -1,0 +1,10 @@
+{
+    "reportsFolder": "\\reports\\",
+    "testsFolder": "\\tests\\",
+    "testPlanName": "traverse_test",
+    "parallelTests": 0,
+    "debugEnabled": true,
+    "reportType": "html",
+    "reportOnTheGo": true,
+    "nukeReports": true
+}

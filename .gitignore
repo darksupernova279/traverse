@@ -1,0 +1,8 @@
+.vscode/
+.vs/
+__pycache__
+reports/
+debug.log
+tests/*.json
+!tests/regression.json
+!tests/debug.json

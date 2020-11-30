@@ -1,0 +1,12 @@
+{
+	"deviceName": "",
+	"browserName": "chrome",
+	"platformVersion": "",
+	"platformName": "WINDOWS",
+	"rotatable": "",
+	"deviceOrientation": "",
+    "chromeOptions": {
+        "w3c": false
+    }
+	
+}
