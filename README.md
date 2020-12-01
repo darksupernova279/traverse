@@ -149,11 +149,15 @@ self.driver = DriverActions(self.t_def.platform, self.t_def.capability, 'my_hook
 - This means selenium will load a file called my_hook_file.json, giving you access to those hooks in the test
 - Q: Why do this instead of just passing the values directly to selenium? 
 - A: You can pass values directly but you end up with repetitive code, you are still able to do so, as I have allowed it in the driver interface, but its cleaner and easily maintainable to use the hook files. Example:
+
 Code using No hook file:
+
 self.driver.select_element('homeBtn', 'homeBtn')
 
 Code using a hook file:
+
 self.driver.select_element('homeBtn')
+
 
 6. Create a product interface for your product
 - Go to the directory traverse/product
