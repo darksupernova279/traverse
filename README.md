@@ -128,16 +128,27 @@ P.S. I have not wrapped ALL selenium functions, I plan to do them as I need, but
 - Go to the directory: traverse/driver/hooks
 - Create a new .json file, name it what you want (Preferably the name of your product)
 - The structure of the json is as follows:
+
 {
+
     "nameOfHook1": {
+
         "type": "id",
+
         "value": "pageTitle"
+
     },
+
     "nameOfHook2": {
+
         "type": "xpath",
+
         "value": "//*[@id="tsf"]/div[2]/div[1]/div[1]/a/img"
+
     }
+
 }
+
 - You will notice you can name your hook anything, this allows you the ability to create your naming standards or follow the same standards as your organisation.
 - Once complete do not forget to let the driver interface know which hooks you want
 - As an additional note, you could create multiple hook files to organise a products hooks into categories or even modules
