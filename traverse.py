@@ -75,7 +75,7 @@ if __name__ == '__main__':
     print('''Traverse is an autoamtion framework of sorts written in Python. It initially was an idea to learn Python and automate a product at the
                 same time. Copyright (C) 2020 Jade. R. Hancox. This program comes with ABSOLUTELY NO WARRANTY; This is free software, and you are welcome
                 to redistribute it under certain conditions. Please see the COPYING.txt file in the root directory for license information. Note that this
-                license applies to all source files in this repository. ''')
+                license applies to all source files in this repository with the exception of the /tests and /product directories. ''')
     traverse_config = TraverseConfig()
 
     if traverse_config.debug_enabled is True:
