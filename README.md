@@ -2,6 +2,7 @@ Traverse is an automation framework built from the ground up. Its focus is on sc
 
 __________________________________________________________________________
 ######** Directory Structure **######
+
 Root(traverse)
 - Top level, where the main traverse.py file sits, and its config file. All execution begins with traverse.py
 
@@ -34,6 +35,7 @@ traverse/utilities
 
 __________________________________________________________________________
 ######** Traverse Config **######
+
 This is a useful configuration file, called "traverse_config.json" and located in the root directory of traverse. Here is a breakdown of each setting and what it does:
 
 Reports Folder
@@ -92,6 +94,7 @@ __________________________________________________________________________
 
 __________________________________________________________________________
 ######** Prepare Your Own Test **######
+
 This assumes you have downloaded the code and you have already opened it in your preferred IDE. If you are only interested in "Non-UI" tests, then steps 1, 2 and 6 will be all you need. If you intend to automate the UI, using a driver like selenium then all steps would apply. 
 
 1. Check Traverse Settings
@@ -103,8 +106,9 @@ This assumes you have downloaded the code and you have already opened it in your
 - Go into the directory traverse/tests
 - Create a new directory, call it what you want (This is the text pack)
 - Go inside your newly created directory and create a new empty .py file. Call it what you like(This is the test suite)
-- Open the newly created .py file. You now need to paste the skeleton into this file. Do so by copy-pasting from an already existing test suite, or use the code below:
--------------------------------------------------------------------------------------------------------------------------------
+- Open the newly created .py file. You now need to paste the skeleton into this file. Do so by copy-pasting from an already existing test suite. This will make it ready for tests to be written. You can begin by creating a new method in this test class and starting to write your first test. 
+- For reference, the code you need to copy-paste is this here:
+
 ''' This is a test module where a test class will be stored. '''
 
 class Tests:
@@ -112,8 +116,7 @@ class Tests:
     def __init__(self, traverse_config, test_definition):
         self.t_config = traverse_config
         self.t_def = test_definition
--------------------------------------------------------------------------------------------------------------------------------
-- This is now ready for tests to be written. You can begin by creating a new method in this test class and starting to write your first test. 
+
 
 3. Bring in Selenium (If you require it for UI tests, API and DB tests don't need this)
 P.S. I have not wrapped ALL selenium functions, I plan to do them as I need, but this does not mean you do not have access to selenium directly via the DriverActions class ;)
