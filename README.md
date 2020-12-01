@@ -121,7 +121,9 @@ class Tests:
 3. Bring in Selenium (If you require it for UI tests, API and DB tests don't need this)
 P.S. I have not wrapped ALL selenium functions, I plan to do them as I need, but this does not mean you do not have access to selenium directly via the DriverActions class ;)
 - In your test class, under the __init__ method, add this line:
+
     self.driver = DriverActions(self.t_def.platform, self.t_def.capability)
+
 - You will now be able to access all selenium functions from the driver interface. 
 
 4. Register hooks for your product
@@ -156,7 +158,9 @@ P.S. I have not wrapped ALL selenium functions, I plan to do them as I need, but
 5. Let Selenium know your hook file
 - Go to your Tests class
 - When declaring to selenium your hook file, add/change this line of code, found in the __init__ method:
+
 self.driver = DriverActions(self.t_def.platform, self.t_def.capability, 'my_hook_file')
+
 - This means selenium will load a file called my_hook_file.json, giving you access to those hooks in the test
 - Q: Why do this instead of just passing the values directly to selenium? 
 - A: You can pass values directly but you end up with repetitive code, you are still able to do so, as I have allowed it in the driver interface, but its cleaner and easily maintainable to use the hook files. Example:
