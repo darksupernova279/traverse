@@ -2,22 +2,23 @@
     interact with this module directly instead of a specific driver, this gives us the option to use other drivers and not just selenium, or
     if we change from selenium to another driver, our tests will not need to change, since we reference this interface and not selenium directly.'''
 
-# Due to the decorator, standards for method doc strings must start with accepted parameters, stating required or optional, then purpose of method.
-
 import os
 from os.path                                    import realpath, dirname
 from functools                                  import wraps
+
 from selenium                                   import webdriver, __version__
 from selenium.webdriver.common.action_chains    import ActionChains
 from selenium.webdriver.common.keys             import Keys
 from selenium.webdriver.support                 import expected_conditions as EC
 from selenium.webdriver.support.ui              import WebDriverWait
+
 from webdriver_manager.chrome                   import ChromeDriverManager
 from webdriver_manager.utils                    import ChromeType
 from webdriver_manager.firefox                  import GeckoDriverManager
 from webdriver_manager.microsoft                import IEDriverManager
 from webdriver_manager.microsoft                import EdgeChromiumDriverManager
 from webdriver_manager.opera                    import OperaDriverManager
+
 from utilities.json_helper                      import LoadJson, GetJsonValue
 
 
@@ -226,7 +227,7 @@ class DriverActions:
 
     @DriverDecorators.check_locate_by
     def hover_over_element(self, hook_value, locate_by=False):
-        ''' '''
+        ''' Goes to an element and hover over it. '''
         element = self.driver.find_element(locate_by, hook_value)
         self.action.move_to_element(element).perform()
 
@@ -248,5 +249,5 @@ class DriverActions:
 
     @DriverDecorators.check_locate_by # To check if we must get the hook type automatically
     def get_element_text(self, hook_value, locate_by=False):
-        '''  '''
+        ''' Retrieves the element text. '''
         return self.driver.find_element(locate_by, hook_value).text

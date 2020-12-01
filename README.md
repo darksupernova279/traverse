@@ -89,3 +89,74 @@ __________________________________________________________________________
     3.1 Ensure your PATH variables are set up correctly in environment variables
     3.2 Upgrade pip by using python -m pip install –upgrade pip
     3.3 Also install pylint via pip, sometimes this has been missing for some reason: pip install pylint
+
+__________________________________________________________________________
+######** Prepare Your Own Test **######
+This assumes you have downloaded the code and you have already opened it in your preferred IDE. If you are only interested in "Non-UI" tests, then steps 1, 2 and 6 will be all you need. If you intend to automate the UI, using a driver like selenium then all steps would apply. 
+
+1. Check Traverse Settings
+- Go to the root directory of traverse
+- Open traverse_config.json
+- Check settings and change as you require. Enabling debug will make it easier to write and test your tests
+
+2. Create the Test Pack/Suite and Test Class
+- Go into the directory traverse/tests
+- Create a new directory, call it what you want (This is the text pack)
+- Go inside your newly created directory and create a new empty .py file. Call it what you like(This is the test suite)
+- Open the newly created .py file. You now need to paste the skeleton into this file. Do so by copy-pasting from an already existing test suite, or use the code below:
+-------------------------------------------------------------------------------------------------------------------------------
+''' This is a test module where a test class will be stored. '''
+
+class Tests:
+    ''' This test class holds test methods. The name of the class must remain exactly "Tests" for the core to pick it up. '''
+    def __init__(self, traverse_config, test_definition):
+        self.t_config = traverse_config
+        self.t_def = test_definition
+-------------------------------------------------------------------------------------------------------------------------------
+- This is now ready for tests to be written. You can begin by creating a new method in this test class and starting to write your first test. 
+
+3. Bring in Selenium (If you require it for UI tests, API and DB tests don't need this)
+P.S. I have not wrapped ALL selenium functions, I plan to do them as I need, but this does not mean you do not have access to selenium directly via the DriverActions class ;)
+- In your test class, under the __init__ method, add this line:
+    self.driver = DriverActions(self.t_def.platform, self.t_def.capability)
+- You will now be able to access all selenium functions from the driver interface. 
+
+4. Register hooks for your product
+- Go to the directory: traverse/driver/hooks
+- Create a new .json file, name it what you want (Preferably the name of your product)
+- The structure of the json is as follows:
+{
+    "nameOfHook1": {
+        "type": "id",
+        "value": "pageTitle"
+    },
+    "nameOfHook2": {
+        "type": "xpath",
+        "value": "//*[@id="tsf"]/div[2]/div[1]/div[1]/a/img"
+    }
+}
+- You will notice you can name your hook anything, this allows you the ability to create your naming standards or follow the same standards as your organisation.
+- Once complete do not forget to let the driver interface know which hooks you want
+- As an additional note, you could create multiple hook files to organise a products hooks into categories or even modules
+
+5. Let Selenium know your hook file
+- Go to your Tests class
+- When declaring to selenium your hook file, add/change this line of code, found in the __init__ method:
+self.driver = DriverActions(self.t_def.platform, self.t_def.capability, 'my_hook_file')
+- This means selenium will load a file called my_hook_file.json, giving you access to those hooks in the test
+- Q: Why do this instead of just passing the values directly to selenium? 
+- A: You can pass values directly but you end up with repetitive code, you are still able to do so, as I have allowed it in the driver interface, but its cleaner and easily maintainable to use the hook files. Example:
+Code using No hook file:
+self.driver.select_element('homeBtn', 'homeBtn')
+
+Code using a hook file:
+self.driver.select_element('homeBtn')
+
+6. Create a product interface for your product
+- Go to the directory traverse/product
+- Create a new directory titled anything you want (Usually the name of the product makes sense)
+- Note there is a README.txt file in this directory as well
+- Go into your newly created directory
+- Create a new .py file
+- This now gives you the freedom to create any class and methods you want that are specific to your product. 
+- To use the methods in your tests, simply import using standard Python imports, and you may need to add it to the __init__ method of the test class, that way you can utilise any settings or configs in the test definition and/or the traverse config.
