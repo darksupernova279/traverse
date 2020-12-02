@@ -56,7 +56,7 @@ class Executor:
 
             # If we make it here it didn't fail, so its a pass, hopefully the test is written to fail correctly for issues :)
             test_def.test_status = TestStatus.PASSED
-            return test_def
+            return self.update_test_definition(test_def, start_time)
 
         except AssertionError:
             test_def.test_status = TestStatus.FAILED
