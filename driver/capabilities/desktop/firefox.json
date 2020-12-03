@@ -1,8 +1,9 @@
 {
-    "deviceName": "",
-	"browserName": "chrome",
+	"deviceName": "",
+	"browserName": "firefox",
 	"platformVersion": "",
 	"platformName": "WINDOWS",
 	"rotatable": "",
 	"deviceOrientation": ""
+	
 }

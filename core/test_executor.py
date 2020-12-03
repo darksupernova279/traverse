@@ -39,6 +39,8 @@ class Executor:
     def execute_test(self, test_def):
         ''' This method will execute a test based on the test definition passed into it. This method only executes 1 test. '''
         try:
+            # Start the Timer
+            start_time = datetime.now()
             # Setup before starting with the test
             self.pre_test_setup(test_def)
             # First get the test module .py file
@@ -51,7 +53,6 @@ class Executor:
             test_func = getattr(test_class, test_def.test_name)
 
             # Execute the test
-            start_time = datetime.now()
             test_func(init_test_class)
 
             # If we make it here it didn't fail, so its a pass, hopefully the test is written to fail correctly for issues :)

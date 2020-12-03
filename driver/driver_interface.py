@@ -110,10 +110,7 @@ class DriverHelper:
                 'deviceOrientation': cap_file['deviceOrientation'],
                 'privateDevicesOnly': False,
                 'phoneOnly': False,
-                'tabletOnly': False,
-                'chromeOptions': {
-                    'w3c': cap_file['chromeOptions']['w3c']
-                }
+                'tabletOnly': False
             }
             return caps
 
