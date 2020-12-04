@@ -44,7 +44,7 @@ class Profiler:
             capabilities = ['Not Applicable']
 
         # Define the function specifically to wrap the logic of setting the test definition
-        def set_test_definition(test, cap, platform, config=None):
+        def set_test_definition(test, cap, platform, config_title=None, config_value=None):
             ''' Created just for this task, to wrap the logic and prevent duplicate code. '''
             test_def = TestDefinition() # Initialise our test definition
             pack, suite, testname = test # Unpack the array into independent variables
@@ -55,7 +55,8 @@ class Profiler:
             test_def.test_name = testname
             test_def.capability = cap
             test_def.platform = platform
-            test_def.test_configuration = config
+            test_def.test_config_title = config_title
+            test_def.test_config_value = config_value
 
             test_def.screenshot_dir = self.t_config.test_result_dir + '\\' + pack + '\\' + suite + '\\'
 
@@ -65,15 +66,17 @@ class Profiler:
         # Now for main loops to create our cartesian of test definitions
         for cap in capabilities:
             for test in tests:
-                if os.path.exists(self.t_config.tests_folder + test[0] + '\\tests_config.json'):
+                test_config_path = self.t_config.tests_folder + test[0] + '\\' + test[1] + '.json'
+                if os.path.exists(test_config_path):
                     # Load the test config json if exists
-                    test_configs = LoadJson.using_filepath(self.t_config.tests_folder + test[0] + '\\tests_config.json')
+                    test_configs = LoadJson.using_filepath(test_config_path)
 
                     # Attach each config to each test, making the cartesian bigger
                     for key, values in test_configs.items():
                         for value in values:
-                            config = (str(key) + ': ' + str(value))
-                            test_def = set_test_definition(test, cap, platform, config)
+                            config_title = str(key)
+                            config_value = str(value)
+                            test_def = set_test_definition(test, cap, platform, config_title, config_value)
                             cartesian.append(test_def)
 
                 else:
@@ -86,4 +89,3 @@ class Profiler:
     def global_setup(self):
         ''' Global Setup will execute a series of pre-test setup tasks before any test executes. This is useful for any form of
             folder creation, test data setup or even a check up to ensure a clean environment '''
-

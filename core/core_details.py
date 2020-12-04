@@ -25,7 +25,8 @@ class TestDefinition:
         self.test_name = None
         self.platform = None
         self.capability = None # If -1 is passed in, this will not require a driver
-        self.test_configuration = None
+        self.test_config_title = None
+        self.test_config_value = None
 
         self.test_status = TestStatus.UNTESTED
         self.test_start_time = None
@@ -39,9 +40,3 @@ class ReportType:
     ''' A holding class for the report types we want to use / differentiate or support. '''
     CMD = 'cmd'
     HTML = 'html'
-
-
-
- # PS this should be done when calling the driver, as its specific to selenium, and hte driver can return a specific error for me to handle a fail or a block
-        # Check to ensure capabilities exist
-        # If not, raise a flag, but do not fail, just exclude those tests, set their status to blocked so they are not executed but still reported on with a reason

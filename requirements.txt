@@ -1,3 +1,7 @@
 tqdm==4.51.0
 webdriver_manager==3.2.2
 selenium==3.141.0
+psycopg2==2.8.6
+paramiko==2.7.2
+sshtunnel==0.3.1
+mysql-connector==2.2.9

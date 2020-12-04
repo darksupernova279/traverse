@@ -31,7 +31,7 @@ class ReporterTasks:
         test_duration = test_def.test_end_time - test_def.test_start_time
         # Print to Terminal
         tqdm.write(f'''{color}Test: {test_def.test_pack} - {test_def.test_suite} - {test_def.test_name} - {test_def.platform} - {test_def.capability}
-                - Test Configuration: {test_def.test_configuration}
+                - Test Configuration: {test_def.test_config_title} : {test_def.test_config_value}
                 - Status: {test_def.test_status}
                 - Duration: {test_duration}
                 - Comments: {test_def.comments}{ColorCodes.ENDC}
@@ -104,7 +104,7 @@ class Reporter:
                             <td>{test.test_name}</td>
                             <td>{test.platform}</td>
                             <td>{test.capability}</td>
-                            <td>{test.test_configuration}</td>
+                            <td>{test.test_config_title} : {test.test_config_value}</td>
                             <td>{test.test_status}</td>
                             <td>{test_duration}</td>
                             <td>{test.comments}</td>

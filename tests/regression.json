@@ -2,11 +2,6 @@
     "platform": "desktop",
     "capabilities": ["chrome", "firefox"],
     "tests": [
-        ["traverse", "error_tests", "error_divide_by_zero"],
-        ["traverse", "error_tests", "error_timeout"],
-        ["traverse", "error_tests", "error_type_error"],
-        ["traverse", "error_tests", "error_assertion"],
-
         ["auto_ecommerce", "fast_tests", "load_auto_practice"],
         ["auto_ecommerce", "fast_tests", "search_for_item"],
         ["auto_ecommerce", "fast_tests", "add_to_cart_and_view_checkout"],

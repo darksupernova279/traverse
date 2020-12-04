@@ -109,3 +109,6 @@ class Executor:
         # Check the screenshot directory is created
         if not os.path.exists(test_def.screenshot_dir):
             os.makedirs(test_def.screenshot_dir)
+
+    def post_test_cleanup(self):
+        ''' This method will be executed after every test to ensure standard clean up operations are conducted. '''

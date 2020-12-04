@@ -51,7 +51,7 @@ Parallel Tests
 - This number indicates how many tests you want to run in parallel. If this is set to 0, traverse will run 1 test at a time sequentially. If you set this to 3 it would execute 4 tests at the same time. 
 
 Debug Enabled
-- If you enable this, traverse will only run tests in the debug.json file in the tests directory
+- If you enable this, traverse will only run tests in the debug.json file in the tests directory. This will not be automatically created, so copy-paste the regression.json and rename it to debug.json so you can make use of this feature. 
 
 Report Type
 - This changes what report will be used. 
@@ -155,9 +155,9 @@ P.S. I have not wrapped ALL selenium functions, I plan to do them as I need, but
 - Once complete do not forget to let the driver interface know which hooks you want
 - As an additional note, you could create multiple hook files to organise a products hooks into categories or even modules
 
-5. Let Selenium know your hook file
+5. Let Driver Actions know your hook file
 - Go to your Tests class
-- When declaring to selenium your hook file, add/change this line of code, found in the __init__ method:
+- When declaring to driver actions your hook file, add/change this line of code, found in the __init__ method:
 
 self.driver = DriverActions(self.t_def.platform, self.t_def.capability, 'my_hook_file')
 

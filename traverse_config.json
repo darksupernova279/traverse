@@ -3,7 +3,7 @@
     "testsFolder": "\\tests\\",
     "testPlanName": "traverse_test",
     "parallelTests": 0,
-    "debugEnabled": true,
+    "debugEnabled": false,
     "reportType": "html",
     "reportOnTheGo": true,
     "nukeReports": true
