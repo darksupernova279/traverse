@@ -2,24 +2,13 @@
     actions are stored here. There are classes for each type of database connection, like Postgre, or SqlLite. There is also a class called
     DatabaseOps which is realted to generic database methods that can be used universally '''
 
+import warnings
+import time
 import sqlite3
 import psycopg2
 import paramiko
-from sshtunnel  import SSHTunnelForwarder
+from sshtunnel          import SSHTunnelForwarder
 from mysql.connector    import Connect as MySqlConnect
-
-def retry(fn):
-    retry_limit = 3
-    attempt = 0
-    while True:
-        if attempt <= retry_limit:
-            try:
-                fn()
-            except Exception as err:
-                attempt = attempt + 1
-                print(f'Tried connecting to DB but got this error: {err}')
-        else:
-            raise Exception('Unable to connect to Database. See console logs.')
 
 
 class DatabaseConnInfo:
@@ -77,22 +66,35 @@ class MySql:
     ''' All methods related to MySQL are stored in this class. '''
 
     @staticmethod
-    @retry
     def connect_to_db(db_conn_info, use_ssh=0):
         ''' Pass in a username and password for the credentials of your MySQL database, along with the host and database name.
             The connection is returned. '''
-        if use_ssh == 1:
-            with SSHTunnelForwarder(
-                    ssh_address_or_host=db_conn_info.ssh_host
-                    , ssh_username=db_conn_info.ssh_user
-                    , ssh_pkey=db_conn_info.ssh_key
-                    , remote_bind_address=(db_conn_info.db_host, db_conn_info.db_port)
-            ) as _:
-                return MySqlConnect(user=db_conn_info.db_username, password=db_conn_info.db_password,
-                                                host=db_conn_info.db_host, database=db_conn_info.db_name, port=db_conn_info.db_port)
-        else:
-            return MySqlConnect(user=db_conn_info.db_username, password=db_conn_info.db_password,
-                                            host=db_conn_info.db_host, database=db_conn_info.db_name, port=db_conn_info.db_port)
+        attempt = 0
+        retry_limit = 3
+        delay = 2
+        while True:
+            if attempt <= retry_limit:
+                try:
+                    if use_ssh == 1:
+                        with SSHTunnelForwarder(
+                                ssh_address_or_host=db_conn_info.ssh_host
+                                , ssh_username=db_conn_info.ssh_user
+                                , ssh_pkey=db_conn_info.ssh_key
+                                , remote_bind_address=(db_conn_info.db_host, db_conn_info.db_port)
+                        ) as _:
+                            return MySqlConnect(user=db_conn_info.db_username, password=db_conn_info.db_password,
+                                                            host=db_conn_info.db_host, database=db_conn_info.db_name, 
+                                                            port=db_conn_info.db_port, connect_timeout=120)
+                    else:
+                        return MySqlConnect(user=db_conn_info.db_username, password=db_conn_info.db_password,
+                                                        host=db_conn_info.db_host, database=db_conn_info.db_name, 
+                                                        port=db_conn_info.db_port, connect_timeout=120)
+                except Exception as err:
+                    attempt = attempt + 1
+                    warnings.warn(f'Tried connecting to DB but got this error: {err}')
+                    time.sleep(delay)
+            else:
+                raise Exception('Unable to connect to Database. See console logs.')
 
 
 
@@ -117,7 +119,6 @@ class PostGre:
     ''' All methods related to PostGre SQL are stored here. '''
 
     @staticmethod
-    @retry
     def connect_to_db(db_conn_info, use_ssh=0):
         ''' Pass in the connection string for the PostGre DB you wish to connect to.
             Example: dbname=test host=redshift-fake-2-me.blahblah.location.redshift.amazonaws.com port=1234 user=root password=mysecret '''
@@ -126,16 +127,28 @@ class PostGre:
                          port={db_conn_info.db_port}
                          user={db_conn_info.db_username}
                          password={db_conn_info.db_password}'''
-        if use_ssh == 0:
-            return psycopg2.connect(conn_str)
-        else:
-            with SSHTunnelForwarder(
-                    ssh_address_or_host=db_conn_info.ssh_host
-                    , ssh_username=db_conn_info.ssh_user
-                    , ssh_pkey=db_conn_info.ssh_key
-                    , remote_bind_address=(db_conn_info.db_host, int(db_conn_info.db_port))
-            ) as _:
-                return psycopg2.connect(conn_str)
+        attempt = 0
+        retry_limit = 3
+        delay = 2
+        while True:
+            if attempt <= retry_limit:
+                try:
+                    if use_ssh == 0:
+                        return psycopg2.connect(conn_str)
+                    else:
+                        with SSHTunnelForwarder(
+                                ssh_address_or_host=db_conn_info.ssh_host
+                                , ssh_username=db_conn_info.ssh_user
+                                , ssh_pkey=db_conn_info.ssh_key
+                                , remote_bind_address=(db_conn_info.db_host, int(db_conn_info.db_port))
+                        ) as _:
+                            return psycopg2.connect(conn_str)
+                except Exception as err:
+                    attempt = attempt + 1
+                    warnings.warn(f'Tried connecting to DB but got this error: {err}')
+                    time.sleep(delay)
+            else:
+                raise Exception('Unable to connect to Database. See console logs.')
 
 
     @staticmethod

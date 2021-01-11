@@ -4,7 +4,6 @@
 
 import os
 from os.path                                    import realpath, dirname
-from functools                                  import wraps
 
 from selenium                                   import webdriver, __version__
 from selenium.webdriver.common.action_chains    import ActionChains
@@ -24,6 +23,7 @@ from utilities.json_helper                      import LoadJson, GetJsonValue
 
 CURRENT_DIR = dirname(realpath(__file__))
 
+
 class LocateBy:
     ''' A class allowing easier reference to a locate by method when selecting ways to interact with an element '''
     ID = 'id'
@@ -33,6 +33,7 @@ class LocateBy:
     TAG_NAME = 'tag name'
     LINK_TEXT = 'link text'
 
+
 class Browsers:
     ''' A holding class for browser names to ensure values are consistent throughout the framework. '''
     CHROME = 'chrome'
@@ -41,21 +42,6 @@ class Browsers:
     IE = 'ie'
     EDGE = 'edge'
     OPERA = 'opera'
-
-
-class DriverDecorators:
-    '''  '''
-    @staticmethod
-    def check_locate_by(driver_fn):
-        @wraps(driver_fn)
-        def _check_if_hook_needed(self, hook_value, locate_by=False, *_):
-            # In this method, the hook_value parameter is actually the hook_name according to the hook boss.
-            if self.hooks is not False:
-                if locate_by is False: # If locate_by is False that means you passed in the hook name, and its up to me to get the hook type and value
-                    locate_by = self.hooks.get_hook_type(hook_value)
-                    hook_value = self.hooks.get_hook_value(hook_value)
-                    return driver_fn(self, hook_value, locate_by)
-        return _check_if_hook_needed
 
 
 class Hooks:
@@ -81,6 +67,15 @@ class Hooks:
         ''' Pass in the hooks name and get returned the type of hook it is. '''
         return self.get_hook(hook_name)[1]
 
+    def replace_hook_token(self, hook_name, new_token_value):
+        ''' Replaces a token placeholder in the hook file. The value you pass in will repalce the token $$token$$. This is extremely
+            useful when using advanced xpaths as ways to hook into elements. '''
+        hook_value = self.hooks[hook_name]['value']
+        hook_value = hook_value.replace('$$token$$', new_token_value)
+        self.hooks[hook_name]['value'] = hook_value
+
+
+
 
 class DriverHelper:
     ''' This class holds all methods related to assisting the driver actions class by keeping any setup and config related work out of the
@@ -91,6 +86,8 @@ class DriverHelper:
         self.driver_name = GetJsonValue.by_key(self.driver_config, 'driverName')
         self.capability_dir = GetJsonValue.by_key(self.driver_config, 'capabilityDir')
         self.screenshot_dir = GetJsonValue.by_key(self.driver_config, 'screenshotDir')
+        self.max_window_default = GetJsonValue.by_key(self.driver_config, 'maxWindowDefault')
+
 
     def load_capability(self, platform, capability):
         ''' Pass in the platform and the capability name. This method returns a dictionary object of the capability. It will first determine
@@ -114,6 +111,7 @@ class DriverHelper:
             }
             return caps
 
+
     def load_driver(self, capabilities):
         ''' This method will load and return the driver. It depends on the capability of the test, for example it references the browser name
             in the capability file. '''
@@ -133,6 +131,10 @@ class DriverHelper:
         else:
             raise Exception('Unable to identify browser to load driver, check your capability file contains the correct value for browser name.')
 
+        # If we set the max window to default we will automatically set the browser window to maximise on driver load
+        if self.max_window_default is True:
+            driver.maximize_window()
+
         return driver
 
 
@@ -149,15 +151,21 @@ class DriverActions:
         else:
             self.hooks = False
 
-    def _check_locate_by(self, hook_value, locate_by):
-        ''' This method is used for driver methods that contain more than just the element and locate by parameters, as the decorator is able to
-            handle methods with 2 arguments, but any further arguments makes it more difficult to manage in a decorator, so for the few methods
-            that need a bit more, this will assist those only. '''
-        # In this method, the hook_value parameter is actually the hook_name according to the hook boss.
+
+    def _check_locate_by(self, hook_value, locate_by, new_token_value):
+        ''' This method is only used internally by the driver class. Pass in the hook name and the locate by method. It returns 2 values, the
+            locator and the hook value. The 3 parameter is the new token value which will replace a token placeholder in a hook value, currently
+            the token to use in a hook file is $$token$$. This token is replaced with the value of new token value that you pass in.'''
+        # In this method, the hook_value parameter is actually the hook_name.
         if self.hooks is not False:
             if locate_by is False: # If locate_by is False that means you passed in the hook name, and its up to me to get the hook type and value
+                if new_token_value is not False: # If a token value is passed in, we must first update the token value in hooks
+                    self.hooks.replace_hook_token(hook_value, new_token_value)
+
                 locate_by, hook_value = self.hooks.get_hook(hook_value)
+
                 return locate_by, hook_value
+
         return locate_by, hook_value
 
 
@@ -189,7 +197,7 @@ class DriverActions:
 
     def get_current_url_in_browser(self):
         ''' Retrieves the current url in the browser and returns it as a string. '''
-        return str(self.driver.execute_js_script("return window.location.href"))
+        return str(self.execute_js_script("return window.location.href"))
 
 
     def refresh_browser(self):
@@ -197,34 +205,34 @@ class DriverActions:
         self.driver.refresh()
 
 
-    @DriverDecorators.check_locate_by # To check if we must get the hook type automatically
-    def wait_for_element_visible(self, hook_value, locate_by=False):
+    def wait_for_element_visible(self, hook_value, locate_by=False, hook_token=False):
         ''' Pass in the locate by type, like the xpath or id, and pass in the element locator, which will be the actual id or xpath '''
+        locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
         self.wait.until(EC.visibility_of_element_located((locate_by, hook_value)))
 
 
-    @DriverDecorators.check_locate_by # To check if we must get the hook type automatically
-    def wait_until_element_invisible(self, hook_value, locate_by=False):
+    def wait_until_element_invisible(self, hook_value, locate_by=False, hook_token=False):
         ''' Wait for an element to become invisible. '''
+        locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
         self.wait.until(EC.invisibility_of_element((locate_by, hook_value)))
 
 
-    def fill_in_field(self, input_text, hook_value, locate_by=False):
+    def fill_in_field(self, input_text, hook_value, locate_by=False, hook_token=False):
         ''' Fill in the field on the webform given the locator passed in. Pass in what to locate the element by, the actual element
             locator (id or xpath etc) and then the text you wish to input into the field  '''
-        locate_by, hook_value = self._check_locate_by(hook_value, locate_by)
+        locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
         self.driver.find_element(locate_by, hook_value).send_keys(input_text)
 
 
-    @DriverDecorators.check_locate_by # To check if we must get the hook type automatically
-    def select_element(self, hook_value, locate_by=False):
+    def select_element(self, hook_value, locate_by=False, hook_token=False):
         ''' Simulate a user select on the given locator. Pass in what to locate the element by, the actual element locator (id or xpath etc)'''
+        locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
         self.driver.find_element(locate_by, hook_value).click()
 
 
-    @DriverDecorators.check_locate_by
-    def hover_over_element(self, hook_value, locate_by=False):
+    def hover_over_element(self, hook_value, locate_by=False, hook_token=False):
         ''' Goes to an element and hover over it. '''
+        locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
         element = self.driver.find_element(locate_by, hook_value)
         self.action.move_to_element(element).perform()
 
@@ -244,7 +252,22 @@ class DriverActions:
         self.action.send_keys(Keys.ENTER).perform()
 
 
-    @DriverDecorators.check_locate_by # To check if we must get the hook type automatically
-    def get_element_text(self, hook_value, locate_by=False):
+    def get_element_text(self, hook_value, locate_by=False, hook_token=False):
         ''' Retrieves the element text. '''
+        locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
         return self.driver.find_element(locate_by, hook_value).text
+
+
+    def switch_to_tab(self, tab_num=1):
+        '''  '''
+        self.driver.switch_to_window(self.driver.window_handles[tab_num])
+
+
+    def switch_to_main_tab(self):
+        '''  '''
+        self.driver.switch_to_window(self.driver.window_handles[0])
+
+
+    def close_current_tab(self):
+        '''  '''
+        self.driver.close()

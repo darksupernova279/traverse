@@ -1,5 +1,6 @@
 {
     "driverName": "Selenium",
     "capabilityDir": "\\capabilities",
-    "screenshotDir": "C:\\Driver\\"
+    "screenshotDir": "C:\\Driver\\",
+    "maxWindowDefault": true
 }

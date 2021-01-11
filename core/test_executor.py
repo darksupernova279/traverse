@@ -77,6 +77,12 @@ class Executor:
 
             return self.update_test_definition(test_def, start_time)
 
+        except KeyError:
+            test_def.test_status = TestStatus.FAILED
+            test_def.comments = 'Key Error'
+
+            return self.update_test_definition(test_def, start_time)
+
         except Exception as err:
             test_def.test_status = TestStatus.FAILED
             test_def.comments = str(err)

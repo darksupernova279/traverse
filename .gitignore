@@ -2,7 +2,6 @@
 .vs/
 __pycache__
 reports/
-debug.log
+*.log
 tests/*.json
 !tests/regression.json
-*.log
