@@ -11,6 +11,13 @@ from sshtunnel          import SSHTunnelForwarder
 from mysql.connector    import Connect as MySqlConnect
 
 
+class DatabaseReturnedNothingError(Exception):
+    ''' This exception is when we query the database and no results are returned. '''
+    def __init__(self):
+        self.err_msg = 'No results returned from the database.'
+        super().__init__(self.err_msg)
+
+
 class DatabaseConnInfo:
     ''' This is a helper class to make database connection info standard for connections. '''
     def __init__(self, ssh_key_path=None):
@@ -112,7 +119,11 @@ class MySql:
         ''' Pass in the connection and the script to be executed. This method retrieves all results from the query. '''
         cursor = conn.cursor()
         cursor.execute(script)
-        return cursor.fetchall()
+        raw_results = cursor.fetchall()
+        if raw_results is []:
+            raise DatabaseReturnedNothingError
+        else:
+            return raw_results
 
 
 class PostGre:
@@ -166,5 +177,10 @@ class PostGre:
         cursor = conn.cursor()
         cursor.execute(script)
         results = cursor.fetchall()
-        conn.close()
-        return results
+        if results is []:
+            conn.close()
+            raise DatabaseReturnedNothingError
+        else:
+            conn.close()
+            return results
+        
