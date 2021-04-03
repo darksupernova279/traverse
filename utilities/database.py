@@ -18,6 +18,45 @@ class DatabaseReturnedNothingError(Exception):
         super().__init__(self.err_msg)
 
 
+def ssh_control_mysql(func):
+    def wrapper(conn_info, *args):
+        if conn_info.use_ssh is True:
+            server = SSHTunnelForwarder(ssh_address_or_host=(conn_info.ssh_host, conn_info.ssh_port)
+                                        , ssh_username=conn_info.ssh_user
+                                        , ssh_pkey=conn_info.ssh_key
+                                        , remote_bind_address=(conn_info.db_host, conn_info.db_port))
+            server.start()
+            conn_info.db_host = '127.0.0.1'
+            conn_info.db_port = server.local_bind_port
+            return_obj = func(conn_info, *args)
+            server.close()
+            return return_obj
+        else:
+            return func(conn_info, *args)
+
+    return wrapper
+
+
+def ssh_control_postgre(func):
+    def wrapper(conn_info, *args):
+        if conn_info.use_ssh is True:
+            try:
+                server = SSHTunnelForwarder(ssh_address_or_host=(conn_info.ssh_host, conn_info.ssh_port)
+                                            , ssh_username=conn_info.ssh_user
+                                            , ssh_pkey=conn_info.ssh_key
+                                            , remote_bind_address=(conn_info.db_host, int(conn_info.db_port)))
+                server.start()
+                return_obj = func(conn_info, *args)
+                server.close()
+                return return_obj
+            except Exception:
+                raise
+        else:
+            return func(conn_info, *args)
+
+    return wrapper
+
+
 class DatabaseConnInfo:
     ''' This is a helper class to make database connection info standard for connections. '''
     def __init__(self, ssh_key_path=None):
@@ -26,7 +65,9 @@ class DatabaseConnInfo:
         self.db_port = None
         self.db_username = None
         self.db_password = None
+        self.use_ssh = False
         self.ssh_host = None
+        self.ssh_port = 22
         self.ssh_user = None
         if ssh_key_path is not None:
             self.ssh_key = paramiko.RSAKey.from_private_key_file(ssh_key_path)
@@ -42,6 +83,15 @@ class DatabaseOps:
             db_script = db_script.replace(key, value)
 
         return db_script
+
+    @staticmethod
+    def convert_sql_results_to_list(raw_results):
+        ''' Pass in your raw results and it retuns a list of every row in that column. Ensure to only pass one column in. '''
+        result_list = []
+        for res in raw_results:
+            result_list.append(res[0])
+
+        return result_list
 
 
 class SqlLite3:
@@ -73,50 +123,54 @@ class MySql:
     ''' All methods related to MySQL are stored in this class. '''
 
     @staticmethod
-    def connect_to_db(db_conn_info, use_ssh=0):
-        ''' Pass in a username and password for the credentials of your MySQL database, along with the host and database name.
-            The connection is returned. '''
+    def connect_to_db(db_conn_info):
+        ''' Pass in the connection object(class) for this module and it returns a connection. '''
         attempt = 0
         retry_limit = 3
         delay = 2
         while True:
             if attempt <= retry_limit:
                 try:
-                    if use_ssh == 1:
-                        with SSHTunnelForwarder(
-                                ssh_address_or_host=db_conn_info.ssh_host
-                                , ssh_username=db_conn_info.ssh_user
-                                , ssh_pkey=db_conn_info.ssh_key
-                                , remote_bind_address=(db_conn_info.db_host, db_conn_info.db_port)
-                        ) as _:
-                            return MySqlConnect(user=db_conn_info.db_username, password=db_conn_info.db_password,
-                                                            host=db_conn_info.db_host, database=db_conn_info.db_name, 
-                                                            port=db_conn_info.db_port, connect_timeout=120)
-                    else:
-                        return MySqlConnect(user=db_conn_info.db_username, password=db_conn_info.db_password,
-                                                        host=db_conn_info.db_host, database=db_conn_info.db_name, 
-                                                        port=db_conn_info.db_port, connect_timeout=120)
+                    return MySqlConnect(user=db_conn_info.db_username
+                        , password=db_conn_info.db_password
+                        , host=db_conn_info.db_host
+                        , database=db_conn_info.db_name
+                        , port=db_conn_info.db_port
+                        , connect_timeout=60)
+
                 except Exception as err:
                     attempt = attempt + 1
                     warnings.warn(f'Tried connecting to DB but got this error: {err}')
                     time.sleep(delay)
             else:
-                raise Exception('Unable to connect to Database. See console logs.')
-
-
+                raise Exception('Unable to connect to MySQL Database. See console logs.')
 
     @staticmethod
-    def execute_query(conn, script):
-        ''' Pass in the connection and the script to be executed. This method does not retrieve any results. '''
+    @ssh_control_mysql
+    def execute_query(conn_info, script):
+        ''' Pass in the connection object(class) and the script to be executed. This method does not retrieve any results. '''
+        conn = MySql.connect_to_db(conn_info)
         cursor = conn.cursor()
         cursor.execute(script)
         conn.commit()
         return True
 
+    @staticmethod
+    @ssh_control_mysql
+    def execute_queries(conn_info, script_list):
+        ''' Pass in the connection object(class) and the list of scripts to be executed. This method does not retrieve any results. '''
+        conn = MySql.connect_to_db(conn_info)
+        cursor = conn.cursor()
+        for script in script_list:
+            cursor.execute(script)
+            conn.commit()
+        return True
 
     @staticmethod
-    def execute_query_return_results(conn, script):
-        ''' Pass in the connection and the script to be executed. This method retrieves all results from the query. '''
+    @ssh_control_mysql
+    def execute_query_return_results(conn_info, script):
+        ''' Pass in the connection object(class) and the script to be executed. This method retrieves all results from the query. '''
+        conn = MySql.connect_to_db(conn_info)
         cursor = conn.cursor()
         cursor.execute(script)
         raw_results = cursor.fetchall()
@@ -130,41 +184,33 @@ class PostGre:
     ''' All methods related to PostGre SQL are stored here. '''
 
     @staticmethod
-    def connect_to_db(db_conn_info, use_ssh=0):
-        ''' Pass in the connection string for the PostGre DB you wish to connect to.
-            Example: dbname=test host=redshift-fake-2-me.blahblah.location.redshift.amazonaws.com port=1234 user=root password=mysecret '''
-        conn_str = f'''dbname={db_conn_info.db_name}
-                         host={db_conn_info.db_host}
-                         port={db_conn_info.db_port}
-                         user={db_conn_info.db_username}
-                         password={db_conn_info.db_password}'''
+    def connect_to_db(conn_info):
+        ''' Pass in the connection object(class) for this module and it returns a connection. '''
+        conn_str = f'''dbname={conn_info.db_name}
+                        host={conn_info.db_host}
+                        port={conn_info.db_port}
+                        user={conn_info.db_username}
+                        password={conn_info.db_password}'''
         attempt = 0
         retry_limit = 3
         delay = 2
         while True:
             if attempt <= retry_limit:
                 try:
-                    if use_ssh == 0:
-                        return psycopg2.connect(conn_str)
-                    else:
-                        with SSHTunnelForwarder(
-                                ssh_address_or_host=db_conn_info.ssh_host
-                                , ssh_username=db_conn_info.ssh_user
-                                , ssh_pkey=db_conn_info.ssh_key
-                                , remote_bind_address=(db_conn_info.db_host, int(db_conn_info.db_port))
-                        ) as _:
-                            return psycopg2.connect(conn_str)
+                    return psycopg2.connect(conn_str)
                 except Exception as err:
                     attempt = attempt + 1
                     warnings.warn(f'Tried connecting to DB but got this error: {err}')
                     time.sleep(delay)
             else:
-                raise Exception('Unable to connect to Database. See console logs.')
+                raise Exception('Unable to connect to PostGre Database. See console logs.')
 
 
     @staticmethod
-    def execute_query(conn, script):
-        ''' Pass in the connection and the script to be executed. This method does not retrieve any results. '''
+    @ssh_control_postgre
+    def execute_query(conn_info, script):
+        ''' Pass in the connection object(class) and the script to be executed. This method does not retrieve any results. '''
+        conn = PostGre.connect_to_db(conn_info)
         cursor = conn.cursor()
         cursor.execute(script)
         conn.close()
@@ -172,8 +218,10 @@ class PostGre:
 
 
     @staticmethod
-    def execute_query_return_results(conn, script):
-        ''' Pass in the connection and the script to be executed. This method retrieves all results from the query. '''
+    @ssh_control_postgre
+    def execute_query_return_results(conn_info, script):
+        ''' Pass in the connection object(class) and the script to be executed. This method retrieves all results from the query. '''
+        conn = PostGre.connect_to_db(conn_info)
         cursor = conn.cursor()
         cursor.execute(script)
         results = cursor.fetchall()
@@ -183,4 +231,3 @@ class PostGre:
         else:
             conn.close()
             return results
-        

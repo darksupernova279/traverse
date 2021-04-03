@@ -57,6 +57,12 @@ class Profiler:
             test_def.platform = platform
             test_def.test_config_title = config_title
             test_def.test_config_value = config_value
+            if config_title == 'productionSafe':
+                if config_value is True:
+                    test_def.production_safe = True
+
+                test_def.test_config_title = ''
+                test_def.test_config_value = ''
 
             test_def.screenshot_dir = self.t_config.test_result_dir + '\\' + pack + '\\' + suite + '\\'
 
@@ -71,13 +77,22 @@ class Profiler:
                     # Load the test config json if exists
                     test_configs = LoadJson.using_filepath(test_config_path)
 
+                    if len(test_configs) < 1:
+                        test_def = set_test_definition(test, cap, platform)
+                        cartesian.append(test_def)
+
                     # Attach each config to each test, making the cartesian bigger
                     for key, values in test_configs.items():
-                        for value in values:
-                            config_title = str(key)
-                            config_value = str(value)
-                            test_def = set_test_definition(test, cap, platform, config_title, config_value)
-                            cartesian.append(test_def)
+                        if key == 'productionSafe':
+                            if len(test_configs) == 1:
+                                test_def = set_test_definition(test, cap, platform, key, values)
+                                cartesian.append(test_def)
+                        else:
+                            for value in values:
+                                config_title = str(key)
+                                config_value = str(value)
+                                test_def = set_test_definition(test, cap, platform, config_title, config_value)
+                                cartesian.append(test_def)
 
                 else:
                     test_def = set_test_definition(test, cap, platform)

@@ -121,7 +121,7 @@ class Reporter:
 
         # Save the final html file
         file_loc = self.t_config.test_result_dir + 'test_report.html'
-        with open(file_loc, 'w') as f_out:
+        with open(file_loc, 'w', encoding="utf-8") as f_out:
             f_out.write(f_data)
 
         # Determine OS we are on and open the report

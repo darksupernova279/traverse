@@ -66,6 +66,11 @@ Nuke Reports
 - If this is enabled then every time traverse is executed, ALL reports in the "reports" folder will be deleted
 - Useful if you want to only see the last completed test run only
 
+Environment
+- Add the name of the environment you are executing against.
+- Traverse has a built in protection check so if you pass in 'production' or 'live' it will check if a test config explicitly sets a test to be production safe, if this flag is not present it will skip that test and move on. Only tests with this flag and it set to true will execute on a live environment. 
+- You can pass the config to an interface you create for your product, giving you the ability to change environment and thus change settings based on that in your product interface. 
+
 __________________________________________________________________________
 ######** Useful Tips **######
 

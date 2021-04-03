@@ -27,11 +27,12 @@ class TestDefinition:
         self.capability = None # If -1 is passed in, this will not require a driver
         self.test_config_title = None
         self.test_config_value = None
+        self.production_safe = False
 
         self.test_status = TestStatus.UNTESTED
         self.test_start_time = None
         self.test_end_time = None
-        self.comments = None
+        self.comments = ''
 
         self.screenshot_dir = None
 
