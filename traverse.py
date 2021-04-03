@@ -46,6 +46,7 @@ class TraverseConfig:
         self.report_type = GetJsonValue.by_key(self._traverse_config, 'reportType')
         self.report_on_the_go = GetJsonValue.by_key(self._traverse_config, 'reportOnTheGo')
         self.nuke_reports = GetJsonValue.by_key(self._traverse_config, 'nukeReports')
+        self.environment = GetJsonValue.by_key(self._traverse_config, 'environment')
 
         self.test_result_dir = self.reports_folder + '\\' + self.test_plan_name + '_' + str(datetime.now().strftime('%Y-%m-%d_%Hh%Mm%Ss')) + '\\'
 
@@ -72,10 +73,12 @@ def preliminary_checks(t_config):
 #                           Main                            #
 #############################################################
 if __name__ == '__main__':
-    print('''Traverse is an autoamtion framework of sorts written in Python. It initially was an idea to learn Python and automate a product at the
-                same time. Copyright (C) 2020 Jade. R. Hancox. This program comes with ABSOLUTELY NO WARRANTY; This is free software, and you are welcome
-                to redistribute it under certain conditions. Please see the COPYING.txt file in the root directory for license information. Note that this
-                license applies to all source files in this repository with the exception of the /tests and /product directories. ''')
+    print(f'''Traverse is an automation framework written in Python. It initially was an idea to learn Python and automate a product at the same time
+                but turned out to become a system in itself to assist making my automation easier. I am sharing this with the world in the hopes it can
+                assist others to venture into automation and help build quality products. Copyright (C) {datetime.now().strftime('%Y')} Jade. R. Hancox.
+                This program comes with ABSOLUTELY NO WARRANTY; This is free software, and you are welcome to redistribute it under certain conditions.
+                Please see the COPYING.txt file in the root directory for license information. Note that this license applies to all source files in this
+                repository with the exception of the /tests and /product directories. ''')
     traverse_config = TraverseConfig()
 
     if traverse_config.debug_enabled is True:

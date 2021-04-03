@@ -42,50 +42,54 @@ class Executor:
             # Start the Timer
             start_time = datetime.now()
             # Setup before starting with the test
-            self.pre_test_setup(test_def)
-            # First get the test module .py file
-            test_module = importlib.import_module(f'tests.{test_def.test_pack}.{test_def.test_suite}')
-            # Get the test class out of the module and store it in a var
-            test_class = getattr(test_module, 'Tests')
-            # Initialise and store in a var the test class, not forgetting to pass it the required arguments
-            init_test_class = test_class(self.t_config, test_def)
-            # Get the function under test to execute - Its the raw function, this doesnt execute it, only loads its definition into mem
-            test_func = getattr(test_class, test_def.test_name)
+            test_def = self.pre_test_setup(test_def)
+            if test_def.test_status == TestStatus.BLOCKED:
+                return self.update_test_definition(test_def, start_time)
+            else:
+                # First get the test module .py file
+                test_module = importlib.import_module(f'tests.{test_def.test_pack}.{test_def.test_suite}')
+                # Get the test class out of the module and store it in a var
+                test_class = getattr(test_module, 'Tests')
+                # Initialise and store in a var the test class, not forgetting to pass it the required arguments
+                init_test_class = test_class(self.t_config, test_def)
+                # Get the function under test to execute - Its the raw function, this doesnt execute it, only loads its definition into mem
+                test_func = getattr(test_class, test_def.test_name)
 
-            # Execute the test
-            test_func(init_test_class)
+                # Execute the test
+                test_func(init_test_class)
 
-            # If we make it here it didn't fail, so its a pass, hopefully the test is written to fail correctly for issues :)
-            test_def.test_status = TestStatus.PASSED
-            return self.update_test_definition(test_def, start_time)
+                # If we make it here it didn't fail, so its a pass, hopefully the test is written to fail correctly for issues :)
+                test_def.test_status = TestStatus.PASSED
+                return self.update_test_definition(test_def, start_time)
+
 
         except AssertionError:
             test_def.test_status = TestStatus.FAILED
-            test_def.comments = 'Assertion Error'
+            test_def.comments = test_def.comments + 'Assertion Error'
 
             return self.update_test_definition(test_def, start_time)
 
         except TimeoutError:
             test_def.test_status = TestStatus.FAILED
-            test_def.comments = 'Timeout Error'
+            test_def.comments = test_def.comments + 'Timeout Error'
 
             return self.update_test_definition(test_def, start_time)
 
         except TypeError:
             test_def.test_status = TestStatus.FAILED
-            test_def.comments = 'Type Error'
+            test_def.comments = test_def.comments + 'Type Error'
 
             return self.update_test_definition(test_def, start_time)
 
         except KeyError:
             test_def.test_status = TestStatus.FAILED
-            test_def.comments = 'Key Error'
+            test_def.comments = test_def.comments + 'Key Error'
 
             return self.update_test_definition(test_def, start_time)
 
         except Exception as err:
             test_def.test_status = TestStatus.FAILED
-            test_def.comments = str(err)
+            test_def.comments = test_def.comments + str(err)
 
             return self.update_test_definition(test_def, start_time)
 
@@ -113,8 +117,26 @@ class Executor:
             tasks, this method is used. Do not this setup method is not 'specific' to a test, the logic here should be general setup required
             before any test, but not specific to a product under test.  '''
         # Check the screenshot directory is created
-        if not os.path.exists(test_def.screenshot_dir):
-            os.makedirs(test_def.screenshot_dir)
+        try:
+            if not os.path.exists(test_def.screenshot_dir):
+                os.makedirs(test_def.screenshot_dir)
+
+        except Exception as err:
+            print(err)
+
+        # Check to ensure if we are on live and if we are safe to execute this
+        if (self.t_config.environment == 'live'
+            or self.t_config.environment == 'production'
+            or self.t_config.environment == 'Live'
+            or self.t_config.environment == 'Production'):
+            if test_def.production_safe is False:
+                test_def.test_status = TestStatus.BLOCKED
+                test_def.comments = test_def.comments + 'Skipped, this test is not production safe!'
+                return test_def
+
+        test_def.test_status = TestStatus.UNTESTED
+        return test_def
+
 
     def post_test_cleanup(self):
         ''' This method will be executed after every test to ensure standard clean up operations are conducted. '''
