@@ -3,5 +3,6 @@
 __pycache__
 reports/
 *.log
+*.json
 tests/*.json
 !tests/regression.json

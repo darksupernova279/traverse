@@ -12,6 +12,7 @@ class LoadJson:
 
         return json.loads(json_data)
 
+
 class GetJsonValue:
     ''' Helper class which "Gets" a json value by a certain method, thus call this class and then a method of how you wish the get the json value. '''
     @staticmethod
@@ -39,3 +40,14 @@ class GetJsonValue:
                 raise
             else:
                 return None
+
+
+class WriteJsonFile:
+    ''' Methods for writing json files. '''
+    @staticmethod
+    def write(json_data, save_path, indent=4):
+        ''' Pass in the json object, the path you want to save the file to including the .json extension.
+            There is an optional parameter for indent which is defaulted to 4.  '''
+        with open(save_path, 'w') as file_out:
+            test = json.dumps(json_data, indent=indent)
+            file_out.write(test)

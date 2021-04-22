@@ -34,9 +34,32 @@ traverse/utilities
 - Any modules, logic or code used to assist the framework, product integration or tests is stored here and imported where necessary
 
 __________________________________________________________________________
+######** Setup **###### {{INCOMPLETE/UNTESTED}}
+
+1. First install Python onto your computer or chosen environment. Traverse is developed on Python 3.8.6 - 64 bit
+2. If applicable to you >> During the Python installation it will allow you to add python to your environment variables, its best to allow it. 
+3. Download the traverse repo to your computer
+4. Open your CMD and navigate to the directory where traverse.py is located
+5. Run the command: pip install -r requirements.txt
+
+Now traverse and its requirements are ready. We still need to configure it a bit, this is optional but preferred. 
+
+6. Open your CMD and navigate to the directory where traverse.py is located
+7. Run the command: traverse -G default
+8. Explanation for step 7 is noted in the traverse config help area. The config we just created can now be changed to your needs. Refer to the traverse config help for details on each option. 
+9. Setup is complete. You are now ready to start using the framework. >>>###(Tutorials to be created with examples on how to use the framework.)###<<<
+
+__________________________________________________________________________
 ######** Traverse Config **######
 
-This is a useful configuration file, called "traverse_config.json" and located in the root directory of traverse. Here is a breakdown of each setting and what it does:
+This is a required configuration file and must be located in the root directory of traverse. To create a new default traverse config follow the below:
+1. Open you CMD/Terminal program
+2. Navigate to the directory where traverse.py is located
+3. Run the command: traverse.py -G default
+4. This will create a new json file in the root directory called "default". You can name it whatever you like but make sure to pass the correct name when executing traverse.
+
+
+Here is a breakdown of each setting and what it does:
 
 Reports Folder
 - This is the location for the reports folder. You can change this to any directory you want. The default is "\\reports\\" which will store reports in traverse/reports
@@ -96,6 +119,14 @@ __________________________________________________________________________
     3.1 Ensure your PATH variables are set up correctly in environment variables
     3.2 Upgrade pip by using python -m pip install –upgrade pip
     3.3 Also install pylint via pip, sometimes this has been missing for some reason: pip install pylint
+
+4. Make VS Code call traverse.py with arguments (so you can call your debug config when testing automation tests.)
+    4.1 Open your launch.json configuration file
+    4.2 Add somethinf like this to the configurations for your python configuration:
+        "args": [
+                    "-T", "debug_config"
+                ],
+    4.3 Save. Now everytime you run debug it will pass those parameters to traverse.py as if you entered them on the terminal/console.
 
 __________________________________________________________________________
 ######** Prepare Your Own Test **######
