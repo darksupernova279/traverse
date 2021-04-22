@@ -1,12 +1,13 @@
 ''' The main file to begin execution of the automation.
 It all starts with traverse.py, from this file, we pass it arguments, and it then takes care of the rest.  '''
 import os
+import sys
 import shutil
 import argparse
 import warnings
 from datetime                   import datetime
 from os.path                    import realpath, dirname
-from utilities.json_helper      import LoadJson, GetJsonValue
+from utilities.json_helper      import LoadJson, GetJsonValue, WriteJsonFile
 from core.test_profiler         import Profiler
 from core.test_executor         import Executor
 from core.test_reporter         import Reporter
@@ -24,6 +25,16 @@ PARSER.add_argument('-S'
                     , type=str
                     , help='Enter the name of the test bundle you wish to execute.')
 
+PARSER.add_argument('-T'
+                    , '--tconfig'
+                    , type=str
+                    , help='Uses a specific traverse config. Pass in the name. Will error if not found.')
+
+PARSER.add_argument('-G'
+                    , '--generate'
+                    , type=str
+                    , help='Creates a new traverse config with default settings.')
+
 # Read arguments from the CMD
 ARGS = PARSER.parse_args()
 
@@ -34,20 +45,31 @@ CURRENT_DIR = dirname(realpath(__file__))
 
 class TraverseConfig:
     ''' Loads the traverse_config.json file and its values for the app to use. '''
-    def __init__(self):
-        self._traverse_config = LoadJson.using_filepath(CURRENT_DIR + '\\traverse_config.json')
+    def __init__(self, config_name=''):
+        if config_name == '':
+            self.reports_folder = '\\reports\\'
+            self.tests_folder = '\\tests\\'
+            self.test_plan_name = 'traverse_test'
+            self.parallel_tests = 0
+            self.debug_enabled = False
+            self.report_type = 'cmd' # Options are 'html' OR 'cmd'
+            self.report_on_the_go = True
+            self.nuke_reports = True
+            self.environment = 'dev'
+        else:
+            self._traverse_config = LoadJson.using_filepath(CURRENT_DIR + '\\' + config_name + '.json')
+
+            self.reports_folder = CURRENT_DIR + GetJsonValue.by_key(self._traverse_config, 'reportsFolder')
+            self.tests_folder = CURRENT_DIR + GetJsonValue.by_key(self._traverse_config, 'testsFolder')
+            self.test_plan_name = GetJsonValue.by_key(self._traverse_config, 'testPlanName')
+            self.parallel_tests = GetJsonValue.by_key(self._traverse_config, 'parallelTests')
+            self.debug_enabled = GetJsonValue.by_key(self._traverse_config, 'debugEnabled')
+            self.report_type = GetJsonValue.by_key(self._traverse_config, 'reportType')
+            self.report_on_the_go = GetJsonValue.by_key(self._traverse_config, 'reportOnTheGo')
+            self.nuke_reports = GetJsonValue.by_key(self._traverse_config, 'nukeReports')
+            self.environment = GetJsonValue.by_key(self._traverse_config, 'environment')
+
         self.tests_json_name = None
-
-        self.reports_folder = CURRENT_DIR + GetJsonValue.by_key(self._traverse_config, 'reportsFolder')
-        self.tests_folder = CURRENT_DIR + GetJsonValue.by_key(self._traverse_config, 'testsFolder')
-        self.test_plan_name = GetJsonValue.by_key(self._traverse_config, 'testPlanName')
-        self.parallel_tests = GetJsonValue.by_key(self._traverse_config, 'parallelTests')
-        self.debug_enabled = GetJsonValue.by_key(self._traverse_config, 'debugEnabled')
-        self.report_type = GetJsonValue.by_key(self._traverse_config, 'reportType')
-        self.report_on_the_go = GetJsonValue.by_key(self._traverse_config, 'reportOnTheGo')
-        self.nuke_reports = GetJsonValue.by_key(self._traverse_config, 'nukeReports')
-        self.environment = GetJsonValue.by_key(self._traverse_config, 'environment')
-
         self.test_result_dir = self.reports_folder + '\\' + self.test_plan_name + '_' + str(datetime.now().strftime('%Y-%m-%d_%Hh%Mm%Ss')) + '\\'
 
         if self.parallel_tests < 0:
@@ -79,8 +101,39 @@ if __name__ == '__main__':
                 This program comes with ABSOLUTELY NO WARRANTY; This is free software, and you are welcome to redistribute it under certain conditions.
                 Please see the COPYING.txt file in the root directory for license information. Note that this license applies to all source files in this
                 repository with the exception of the /tests and /product directories. ''')
-    traverse_config = TraverseConfig()
 
+    if ARGS.generate:
+        default_config = {
+            'reportsFolder': '\\reports\\',
+            'testsFolder': '\\tests\\',
+            'testPlanName': 'traverse_test',
+            'parallelTests': 0,
+            'debugEnabled': True,
+            'reportType': 'html',
+            'reportOnTheGo': True,
+            'nukeReports': True,
+            'environment': 'dev'
+        }
+        if os.path.exists(CURRENT_DIR + '\\' + ARGS.generate + '.json'):
+            while True:
+                proceed = input(f'\nThere is already a {ARGS.generate} config. Do you want to overwrite?\nY/n? ')
+
+                if proceed == 'Y' or proceed == '':
+                    WriteJsonFile.write(default_config, CURRENT_DIR + '\\' + ARGS.generate + '.json')
+                    break
+                elif proceed == 'n':
+                    sys.exit()
+                else:
+                    print('\nInput not recognised. Please try again!')
+                    continue
+
+    # Load the Traverse Config
+    if ARGS.tconfig:
+        traverse_config = TraverseConfig(ARGS.tconfig)
+    else:
+        traverse_config = TraverseConfig()
+
+    # If debug is enabled we only load tests in the debug config. This is for development purposes.
     if traverse_config.debug_enabled is True:
         warnings.warn('Debug Enabled! Will only execute debug tests')
         traverse_config.tests_json_name = 'debug.json'
