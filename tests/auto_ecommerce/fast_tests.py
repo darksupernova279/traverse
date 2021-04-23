@@ -4,7 +4,7 @@ from driver.driver_interface import DriverActions
 
 
 class Tests:
-    ''' This test class holds test methods. The name of the class must reamin exactly "Tests" for the core to pick it up. '''
+    ''' This test class holds test methods. The name of the class must remain exactly "Tests" for the core to pick it up. '''
     def __init__(self, traverse_config, test_definition):
         # The traverse config is avaialble for use in tests for any custom work that may need values stored in the config
         self.t_config = traverse_config
