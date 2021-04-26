@@ -46,6 +46,8 @@ def ssh_control_postgre(func):
                                             , ssh_pkey=conn_info.ssh_key
                                             , remote_bind_address=(conn_info.db_host, int(conn_info.db_port)))
                 server.start()
+                conn_info.db_host = '127.0.0.1'
+                conn_info.db_port = server.local_bind_port
                 return_obj = func(conn_info, *args)
                 server.close()
                 return return_obj
