@@ -126,6 +126,10 @@ if __name__ == '__main__':
                 else:
                     print('\nInput not recognised. Please try again!')
                     continue
+        else:
+            WriteJsonFile.write(default_config, CURRENT_DIR + '\\' + ARGS.generate + '.json')
+            print('\nT Config Created!')
+            sys.exit()
 
     # Load the Traverse Config
     if ARGS.tconfig:
