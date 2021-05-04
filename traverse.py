@@ -47,30 +47,44 @@ class TraverseConfig:
     ''' Loads the traverse_config.json file and its values for the app to use. '''
     def __init__(self, config_name=''):
         if config_name == '':
-            self.reports_folder = '\\reports\\'
             self.tests_folder = '\\tests\\'
             self.test_plan_name = 'traverse_test'
             self.parallel_tests = 0
             self.debug_enabled = False
-            self.report_type = 'cmd' # Options are 'html' OR 'cmd'
-            self.report_on_the_go = True
-            self.nuke_reports = True
             self.environment = 'dev'
+            self.reporting_folder = '\\reports\\'
+            self.reporting_delivery_type = 'cmd' # Options are 'html' OR 'cmd' OR 'email'
+            self.reporting_on_the_go = True
+            self.reporting_nuke_reports = False
+            self.reporting_html_template = ''
+            self.reporting_email_sender = ''
+            self.reporting_email_password = ''
+            self.reporting_email_mailing_list = []
+            self.reporting_email_smtp_server = ''
+            self.reporting_email_smtp_port = 465
+            self.reporting_email_subject = ''
         else:
             self._traverse_config = LoadJson.using_filepath(CURRENT_DIR + '\\' + config_name + '.json')
 
-            self.reports_folder = CURRENT_DIR + GetJsonValue.by_key(self._traverse_config, 'reportsFolder')
             self.tests_folder = CURRENT_DIR + GetJsonValue.by_key(self._traverse_config, 'testsFolder')
             self.test_plan_name = GetJsonValue.by_key(self._traverse_config, 'testPlanName')
             self.parallel_tests = GetJsonValue.by_key(self._traverse_config, 'parallelTests')
             self.debug_enabled = GetJsonValue.by_key(self._traverse_config, 'debugEnabled')
-            self.report_type = GetJsonValue.by_key(self._traverse_config, 'reportType')
-            self.report_on_the_go = GetJsonValue.by_key(self._traverse_config, 'reportOnTheGo')
-            self.nuke_reports = GetJsonValue.by_key(self._traverse_config, 'nukeReports')
             self.environment = GetJsonValue.by_key(self._traverse_config, 'environment')
+            self.reporting_folder = CURRENT_DIR + GetJsonValue.by_key(self._traverse_config, 'reporting', 'reportsFolder')
+            self.reporting_delivery_type = GetJsonValue.by_key(self._traverse_config, 'reporting', 'reportDeliveryType')
+            self.reporting_on_the_go = GetJsonValue.by_key(self._traverse_config, 'reporting', 'reportOnTheGo')
+            self.reporting_nuke_reports = GetJsonValue.by_key(self._traverse_config, 'reporting', 'nukeReports')
+            self.reporting_html_template = GetJsonValue.by_key(self._traverse_config, 'reporting', 'htmlTemplate')
+            self.reporting_email_sender = GetJsonValue.by_key(self._traverse_config, 'reporting', 'emailSettings', 'senderEmail')
+            self.reporting_email_password = GetJsonValue.by_key(self._traverse_config, 'reporting', 'emailSettings', 'senderPassword')
+            self.reporting_email_mailing_list = GetJsonValue.by_key(self._traverse_config, 'reporting', 'emailSettings', 'reportMailingList')
+            self.reporting_email_smtp_server = GetJsonValue.by_key(self._traverse_config, 'reporting', 'emailSettings', 'smtpServer')
+            self.reporting_email_smtp_port = GetJsonValue.by_key(self._traverse_config, 'reporting', 'emailSettings', 'smtpPort')
+            self.reporting_email_subject = GetJsonValue.by_key(self._traverse_config, 'reporting', 'emailSettings', 'emailSubject')
 
         self.tests_json_name = None
-        self.test_result_dir = self.reports_folder + '\\' + self.test_plan_name + '_' + str(datetime.now().strftime('%Y-%m-%d_%Hh%Mm%Ss')) + '\\'
+        self.test_result_dir = self.reporting_folder + '\\' + self.test_plan_name + '_' + str(datetime.now().strftime('%Y-%m-%d_%Hh%Mm%Ss')) + '\\'
 
         if self.parallel_tests < 0:
             raise Exception('Parallel tests set to less than 0!')
@@ -78,13 +92,13 @@ class TraverseConfig:
 def preliminary_checks(t_config):
     ''' This function will do some checks before starting any work, mainly to be sure everything is in order and ready for traverse to begin. '''
     # If the setting is to nuke reports, we delete and remake the directory
-    if t_config.nuke_reports is True:
-        if os.path.exists(t_config.reports_folder):
-            shutil.rmtree(t_config.reports_folder)
-            os.makedirs(t_config.reports_folder)
+    if t_config.reporting_nuke_reports is True:
+        if os.path.exists(t_config.reporting_folder):
+            shutil.rmtree(t_config.reporting_folder)
+            os.makedirs(t_config.reporting_folder)
     else:
-        if not os.path.exists(t_config.reports_folder):
-            os.makedirs(t_config.reports_folder)
+        if not os.path.exists(t_config.reporting_folder):
+            os.makedirs(t_config.reporting_folder)
 
     # Ensure Test Results Folder Exists
     if not os.path.exists(t_config.test_result_dir):
@@ -95,24 +109,37 @@ def preliminary_checks(t_config):
 #                           Main                            #
 #############################################################
 if __name__ == '__main__':
-    print(f'''Traverse is an automation framework written in Python. It initially was an idea to learn Python and automate a product at the same time
-                but turned out to become a system in itself to assist making my automation easier. I am sharing this with the world in the hopes it can
-                assist others to venture into automation and help build quality products. Copyright (C) {datetime.now().strftime('%Y')} Jade. R. Hancox.
-                This program comes with ABSOLUTELY NO WARRANTY; This is free software, and you are welcome to redistribute it under certain conditions.
-                Please see the COPYING.txt file in the root directory for license information. Note that this license applies to all source files in this
-                repository with the exception of the /tests and /product directories. ''')
+    print(f'''
+            Traverse is an automation framework written in Python. It initially was an idea to learn Python and automate a product at the same time
+            but turned out to become a system in itself to assist making my automation easier. I am sharing this with the world in the hopes it can
+            assist others to venture into automation and help build quality products. Copyright (C) {datetime.now().strftime('%Y')} Jade. R. Hancox.
+            This program comes with ABSOLUTELY NO WARRANTY; This is free software, and you are welcome to redistribute it under certain conditions.
+            Please see the COPYING.txt file in the root directory for license information. Note that this license applies to all source files in this
+            repository with the exception of the /tests and /product directories.
+        ''')
 
     if ARGS.generate:
         default_config = {
-            'reportsFolder': '\\reports\\',
             'testsFolder': '\\tests\\',
             'testPlanName': 'traverse_test',
             'parallelTests': 0,
-            'debugEnabled': True,
-            'reportType': 'html',
-            'reportOnTheGo': True,
-            'nukeReports': True,
-            'environment': 'dev'
+            'debugEnabled': False,
+            'environment': 'dev',
+            'reporting': {
+                'reportsFolder': '\\reports\\',
+                'reportDeliveryType': 'html',
+                'reportOnTheGo': True,
+                'nukeReports': True,
+                'htmlTemplate': '',
+                'emailSettings': {
+                    'senderEmail': '',
+                    'senderPassword': '',
+                    'reportMailingList': [''],
+                    'smtpServer': 'smtp.gmail.com',
+                    'smtpPort': 465,
+                    'emailSubject': ''
+                }
+            }
         }
         if os.path.exists(CURRENT_DIR + '\\' + ARGS.generate + '.json'):
             while True:
