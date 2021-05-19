@@ -51,21 +51,34 @@ class ReporterTasks:
         ''' This method builds and returns the default html code stored in report.html '''
         # First create an empty string object
         html_combined = ''
+        css_class_passed = 'background-color: #3cc47c;'
+        css_class_failed = 'background-color: #e24e42;'
+        css_class_blocked = 'background-color: #cccccc;'
+        css_class_retest = 'background-color: #ffe400;'
         # Now loop and concatenate each row to the html string
         for test in test_results:
+            if test.test_status == TestStatus.PASSED:
+                css_for_row = css_class_passed
+            elif test.test_status == TestStatus.FAILED:
+                css_for_row = css_class_failed
+            elif test.test_status == TestStatus.RETEST:
+                css_for_row = css_class_retest
+            elif test.test_status == TestStatus.BLOCKED:
+                css_for_row = css_class_blocked
+
             test_duration = test.test_end_time - test.test_start_time
             html_fragment = f'''
-                        <tr>
-                            <td>{test.test_id}</td>
-                            <td>{test.test_pack}</td>
-                            <td>{test.test_suite}</td>
-                            <td>{test.test_name}</td>
-                            <td>{test.platform}</td>
-                            <td>{test.capability}</td>
-                            <td>{test.test_config_title} : {test.test_config_value}</td>
-                            <td>{test.test_status}</td>
-                            <td>{test_duration}</td>
-                            <td>{test.comments}</td>
+                        <tr style="{css_for_row}">
+                            <td style="padding: 2px;">{test.test_id}</td>
+                            <td style="padding: 2px;">{test.test_pack}</td>
+                            <td style="padding: 2px;">{test.test_suite}</td>
+                            <td style="padding: 2px;">{test.test_name}</td>
+                            <td style="padding: 2px;">{test.platform}</td>
+                            <td style="padding: 2px;">{test.capability}</td>
+                            <td style="padding: 2px;">{test.test_config_title} : {test.test_config_value}</td>
+                            <td style="padding: 2px; font-weight: bold;">{test.test_status}</td>
+                            <td style="padding: 2px;">{test_duration}</td>
+                            <td style="padding: 2px;">{test.comments}</td>
                         </tr>
                             '''
             html_combined = html_combined + html_fragment
