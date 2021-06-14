@@ -19,6 +19,7 @@ from webdriver_manager.microsoft                import EdgeChromiumDriverManager
 from webdriver_manager.opera                    import OperaDriverManager
 
 from utilities.json_helper                      import LoadJson, GetJsonValue
+from core.core_details                          import TestDefinition
 
 
 CURRENT_DIR = dirname(realpath(__file__))
@@ -75,8 +76,6 @@ class Hooks:
         self.hooks[hook_name]['value'] = hook_value
 
 
-
-
 class DriverHelper:
     ''' This class holds all methods related to assisting the driver actions class by keeping any setup and config related work out of the
         actions class. '''
@@ -85,7 +84,6 @@ class DriverHelper:
 
         self.driver_name = GetJsonValue.by_key(self.driver_config, 'driverName')
         self.capability_dir = GetJsonValue.by_key(self.driver_config, 'capabilityDir')
-        self.screenshot_dir = GetJsonValue.by_key(self.driver_config, 'screenshotDir')
         self.max_window_default = GetJsonValue.by_key(self.driver_config, 'maxWindowDefault')
 
 
@@ -140,9 +138,10 @@ class DriverHelper:
 
 class DriverActions:
     ''' This class is the main one used in tests which does the actual interaction with the driver and product under test. '''
-    def __init__(self, platform, capability, hook_file_name=False):
+    def __init__(self, test_definition: TestDefinition, hook_file_name=False):
         self.driver_setup = DriverHelper()
-        self.caps = self.driver_setup.load_capability(platform, capability)
+        self.test_def = test_definition
+        self.caps = self.driver_setup.load_capability(test_definition.platform, test_definition.capability)
         self.driver = self.driver_setup.load_driver(self.caps)
         self.action = ActionChains(self.driver)
         self.wait = WebDriverWait(self.driver, 60)
@@ -237,10 +236,13 @@ class DriverActions:
         self.action.move_to_element(element).perform()
 
 
-    def take_screenshot(self, directory=None, file_name='test'):
+    def take_screenshot(self, directory=None, file_name=None):
         ''' Takes a screenshot and stores it under the specified directory. Passing in a file name is optional. '''
+        if file_name is None:
+            file_name = self.test_def.test_name
+
         if directory is None:
-            directory = self.driver_setup.screenshot_dir
+            directory = f'{self.test_def.screenshot_dir}'
             if not os.path.exists(directory):
                 os.makedirs(directory)
         num_of_screenshots = len([name for name in os.listdir(directory)])

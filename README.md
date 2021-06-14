@@ -122,7 +122,7 @@ __________________________________________________________________________
 
 4. Make VS Code call traverse.py with arguments (so you can call your debug config when testing automation tests.)
     4.1 Open your launch.json configuration file
-    4.2 Add somethinf like this to the configurations for your python configuration:
+    4.2 Add something like this to the configurations for your python configuration:
         "args": [
                     "-T", "debug_config"
                 ],
