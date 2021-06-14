@@ -29,7 +29,7 @@ class Executor:
 
         for result in tqdm(pool.imap_unordered(self.execute_test, tests_to_run), total=len(tests_to_run)):
             completed_tests.append(result)
-            if self.t_config.report_on_the_go is True:
+            if self.t_config.reporting_on_the_go is True:
                 ReporterTasks.report_test_via_cmd(result)
 
 

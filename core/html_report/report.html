@@ -1,44 +1,25 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Test Results</title>
-</head>
-<body>
-    <h2>Welcome to your test report!</h2>
-    <br>
-
-    <table style="width:100%" border="1" id="resultsTable">
-        <tr>
-            <th>ID</th>
-            <th>Test Pack</th>
-            <th>Test Suite</th>
-            <th>Test Name</th>
-            <th>Platform</th>
-            <th>Capability</th>
-            <th>Test Configuration</th>
-            <th>Test Status</th>
-            <th>Test Duration</th>
-            <th>Comments</th>
-        </tr>
-        _rowToken_
-    </table>
-
-    <script> 
-        function updateStatusColors(tableName){
-            var table = document.getElementById(tableName);
-            var tds = table.getElementsByTagName("td");
-    
-            for(var i = 0, j = tds.length; i < j; ++i)
-                if (tds[i].innerHTML == "Passed"){
-                    tds[i].style.backgroundColor = "#32CD32"
-                } else if (tds[i].innerHTML == "Failed"){
-                    tds[i].style.backgroundColor = "#FF0000"
-                }
-                
-        }
-        window.updateStatusColors('resultsTable')
-    </script>
-
-</body>
-
+    <head>
+        <title>Test Results</title>
+    </head>
+    <body style="font-family: Georgia;">
+        <h2>Welcome to your test report!</h2>
+        <br>
+        <table style="width:100%; border: 2px solid black; text-align: center;" border="1" id="resultsTable">
+            <tr style="padding: 2px;">
+                <th style="padding: 4px;">ID</th>
+                <th style="padding: 4px;">Test Pack</th>
+                <th style="padding: 4px;">Test Suite</th>
+                <th style="padding: 4px;">Test Name</th>
+                <th style="padding: 4px;">Platform</th>
+                <th style="padding: 4px;">Capability</th>
+                <th style="padding: 4px;">Test Configuration</th>
+                <th style="padding: 4px;">Test Status</th>
+                <th style="padding: 4px;">Test Duration</th>
+                <th style="padding: 4px;">Comments</th>
+            </tr>
+            _rowToken_
+        </table>
+    </body>
 </html>

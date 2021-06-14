@@ -37,7 +37,8 @@ class TestDefinition:
         self.screenshot_dir = None
 
 
-class ReportType:
+class ReportDeliveryType:
     ''' A holding class for the report types we want to use / differentiate or support. '''
     CMD = 'cmd'
     HTML = 'html'
+    EMAIL = 'email'

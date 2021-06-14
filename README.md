@@ -45,7 +45,7 @@ __________________________________________________________________________
 Now traverse and its requirements are ready. We still need to configure it a bit, this is optional but preferred. 
 
 6. Open your CMD and navigate to the directory where traverse.py is located
-7. Run the command: traverse -G default
+7. Run the command: traverse.py -G default
 8. Explanation for step 7 is noted in the traverse config help area. The config we just created can now be changed to your needs. Refer to the traverse config help for details on each option. 
 9. Setup is complete. You are now ready to start using the framework. >>>###(Tutorials to be created with examples on how to use the framework.)###<<<
 
