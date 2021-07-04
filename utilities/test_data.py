@@ -16,6 +16,9 @@ class TestData:
         with open(f'{CURRENT_DIR}\\test_data\\last_names.csv', 'r') as open_file:
             self.last_names = tuple(reader(open_file))
 
+        with codecs.open(f'{CURRENT_DIR}\\test_data\\company_names.csv', encoding='utf-8-sig') as open_file:
+            self.company_names = tuple(reader(open_file))
+
     def get_random_first_name(self):
         ''' Gets a random first name and returns it as a string type. '''
         return random.choice(self.first_names)[0]
@@ -23,3 +26,8 @@ class TestData:
     def get_random_last_name(self):
         ''' Gets a random last name and returns it as a string type. '''
         return random.choice(self.last_names)[0]
+
+    def get_random_company_name(self):
+        ''' Returns a random company name. '''
+        return random.choice(self.company_names)[0]
+

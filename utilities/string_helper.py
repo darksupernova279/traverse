@@ -10,7 +10,11 @@ class StringHelper:
         return email.replace(email[pos_a:pos_dot], domain)
 
     @staticmethod
-    def convert_to_csv(list_items):
+    def convert_to_csv(list_items, add_single_quotes=False):
         ''' Pass in a list and you will be returned a csv string. '''
         if isinstance(list_items, list):
-            return ','.join(map(str, list_items))
+            csv = ','.join(map(str, list_items))
+            if add_single_quotes is True:
+                csv = str(list_items)
+                csv = csv.replace('[', '').replace(']', '')
+            return csv

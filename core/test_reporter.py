@@ -102,9 +102,7 @@ class ReporterTasks:
 
         for test in test_results:
             html_fragment = f'''
-                        <p>
                             {test.comments}
-                        </p>
                             '''
             html_combined = html_combined + html_fragment
 
@@ -176,7 +174,10 @@ class Reporter:
     def report_via_html_file(self):
         ''' This method will report all test results by building an html page and opening up in a browser '''
 
-        html_data_file = ReporterTasks.build_test_results_html(self.t_results)
+        if self.t_config.reporting_html_template == '':
+            html_data_file = ReporterTasks.build_test_results_html(self.t_results)
+        else:
+            html_data_file = ReporterTasks.build_custom_html_comments_only(self.t_results, self.t_config.reporting_html_template)
 
         # Save the final html file
         file_loc = self.t_config.test_result_dir + 'test_report.html'
