@@ -2,6 +2,7 @@
     interact with this module directly instead of a specific driver, this gives us the option to use other drivers and not just selenium, or
     if we change from selenium to another driver, our tests will not need to change, since we reference this interface and not selenium directly.'''
 
+import time
 import os
 from os.path                                    import realpath, dirname
 
@@ -67,13 +68,6 @@ class Hooks:
     def get_hook_value(self, hook_name):
         ''' Pass in the hooks name and get returned the type of hook it is. '''
         return self.get_hook(hook_name)[1]
-
-    def replace_hook_token(self, hook_name, new_token_value):
-        ''' Replaces a token placeholder in the hook file. The value you pass in will repalce the token $$token$$. This is extremely
-            useful when using advanced xpaths as ways to hook into elements. '''
-        hook_value = self.hooks[hook_name]['value']
-        hook_value = hook_value.replace('$$token$$', new_token_value)
-        self.hooks[hook_name]['value'] = hook_value
 
 
 class DriverHelper:
@@ -151,21 +145,24 @@ class DriverActions:
             self.hooks = False
 
 
-    def _check_locate_by(self, hook_value, locate_by, new_token_value):
-        ''' This method is only used internally by the driver class. Pass in the hook name and the locate by method. It returns 2 values, the
+    def _check_locate_by(self, hook, locate_by, new_token_value):
+        '''
+            This method is only used internally by the driver class. Pass in the hook name and the locate by method. It returns 2 values, the
             locator and the hook value. The 3 parameter is the new token value which will replace a token placeholder in a hook value, currently
-            the token to use in a hook file is $$token$$. This token is replaced with the value of new token value that you pass in.'''
-        # In this method, the hook_value parameter is actually the hook_name.
+            the token to use in a hook file is $$token$$. This token is replaced with the value of new token value that you pass in.
+        '''
+        # In this method, the hook parameter is the hook_name.
         if self.hooks is not False:
             if locate_by is False: # If locate_by is False that means you passed in the hook name, and its up to me to get the hook type and value
                 if new_token_value is not False: # If a token value is passed in, we must first update the token value in hooks
-                    self.hooks.replace_hook_token(hook_value, new_token_value)
+                    locate_by, hook_value = self.hooks.get_hook(hook)
+                    hook_value = hook_value.replace('$$token$$', new_token_value)
+                    return locate_by, hook_value
 
-                locate_by, hook_value = self.hooks.get_hook(hook_value)
-
+                locate_by, hook_value = self.hooks.get_hook(hook)
                 return locate_by, hook_value
 
-        return locate_by, hook_value
+        return locate_by, hook
 
 
     def launch_url(self, url):
@@ -208,25 +205,65 @@ class DriverActions:
         ''' Pass in the locate by type, like the xpath or id, and pass in the element locator, which will be the actual id or xpath '''
         locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
         self.wait.until(EC.visibility_of_element_located((locate_by, hook_value)))
+        time.sleep(0.5) # Selenium does not play well with SPA's, sometimes executes too fast and interferes with UI component rendering.
 
 
     def wait_until_element_invisible(self, hook_value, locate_by=False, hook_token=False):
         ''' Wait for an element to become invisible. '''
         locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
         self.wait.until(EC.invisibility_of_element((locate_by, hook_value)))
+        time.sleep(0.5) # Selenium does not play well with SPA's, sometimes executes too fast and interferes with UI component rendering.
+
+
+    def wait_until_element_clickable(self, hook_value, locate_by=False, hook_token=False):
+        ''' Wait until an element is enalbed or 'clickable' '''
+        locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
+        self.wait.until(EC.element_to_be_clickable((locate_by, hook_value)))
 
 
     def fill_in_field(self, input_text, hook_value, locate_by=False, hook_token=False):
-        ''' Fill in the field on the webform given the locator passed in. Pass in what to locate the element by, the actual element
-            locator (id or xpath etc) and then the text you wish to input into the field  '''
+        '''
+            Fill in the field on the webform given the locator passed in. Pass in what to locate the element by, the actual element
+            locator (id or xpath etc) and then the text you wish to input into the field
+        '''
         locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
         self.driver.find_element(locate_by, hook_value).send_keys(input_text)
+        time.sleep(0.5) # Selenium does not play well with SPA's, sometimes executes too fast and interferes with UI component rendering.
+
+
+    def clear_input(self, hook_value, locate_by=False, hook_token=False):
+        '''
+            Clear the value in an input element. Pass in what to locate the element by, the actual element locator (id or xpath etc).
+            If you have a token in the hook file then pass in the value you want the token replaced with using the hook_token parameter.
+        '''
+        locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
+        self.driver.find_element(locate_by, hook_value).clear()
+        # TO DO: In some cases selenium does not work, need to execute js directly which works 99% of the time. Code left below to remind me:
+        # document.getElementById('elementId').value = null
+        time.sleep(0.5) # Selenium does not play well with SPA's, sometimes executes too fast and interferes with UI component rendering.
+
+
+    def get_element_dynamic_id_by_text(self, partial_id, text_to_find):
+        '''
+            Returns the id number or incrementing part of the element id. That is when you pass in a partial_id,
+            this method will strip off the partial id from the id it finds. This method returns a tuple, the first value
+            is the entire id and the 2nd value is just the id without the partial part passed in.
+        '''
+        element = self.driver.find_element_by_xpath(f"//*[contains(@id, '{partial_id}') and contains(text(), '{text_to_find}')]")
+        if isinstance(element, list) or isinstance(element, tuple):
+            return str(element[0].get_attribute('id')).replace(partial_id, '')
+        else:
+            return str(element.get_attribute('id')).replace(partial_id, '')
 
 
     def select_element(self, hook_value, locate_by=False, hook_token=False):
-        ''' Simulate a user select on the given locator. Pass in what to locate the element by, the actual element locator (id or xpath etc)'''
+        '''
+            Simulate a user select on the given locator. Pass in what to locate the element by, the actual element locator (id or xpath etc).
+            If you have a token in the hook file then pass in the value you want the token replaced with using the hook_token parameter.
+        '''
         locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
         self.driver.find_element(locate_by, hook_value).click()
+        time.sleep(0.5) # Selenium does not play well with SPA's, sometimes executes too fast and interferes with UI component rendering.
 
 
     def hover_over_element(self, hook_value, locate_by=False, hook_token=False):
@@ -261,15 +298,15 @@ class DriverActions:
 
 
     def switch_to_tab(self, tab_num=1):
-        '''  '''
+        ''' This method switches the driver control to a new tab. '''
         self.driver.switch_to_window(self.driver.window_handles[tab_num])
 
 
     def switch_to_main_tab(self):
-        '''  '''
+        ''' Returns driver control to the main tab, usually with index 0. '''
         self.driver.switch_to_window(self.driver.window_handles[0])
 
 
     def close_current_tab(self):
-        '''  '''
+        ''' Will close the current tab under driver control. '''
         self.driver.close()
