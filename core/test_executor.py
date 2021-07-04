@@ -32,7 +32,6 @@ class Executor:
             if self.t_config.reporting_on_the_go is True:
                 ReporterTasks.report_test_via_cmd(result)
 
-
         return completed_tests
 
 
@@ -61,7 +60,6 @@ class Executor:
                 # If we make it here it didn't fail, so its a pass, hopefully the test is written to fail correctly for issues :)
                 test_def.test_status = TestStatus.PASSED
                 return self.update_test_definition(test_def, start_time)
-
 
         except AssertionError:
             test_def.test_status = TestStatus.FAILED
@@ -92,6 +90,13 @@ class Executor:
             test_def.comments = test_def.comments + str(err)
 
             return self.update_test_definition(test_def, start_time)
+
+        finally:
+        # Try clean up driver, if this works then there was a driver, if not then driver probably not used in the test.
+            try:
+                init_test_class.driver.quit_the_driver()
+            finally:
+                print('Info: No driver found in Test')
 
 
     def update_test_definition(self, test_def, start_time):

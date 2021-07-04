@@ -21,16 +21,23 @@ class DatabaseReturnedNothingError(Exception):
 def ssh_control_mysql(func):
     def wrapper(conn_info, *args):
         if conn_info.use_ssh is True:
-            server = SSHTunnelForwarder(ssh_address_or_host=(conn_info.ssh_host, conn_info.ssh_port)
-                                        , ssh_username=conn_info.ssh_user
-                                        , ssh_pkey=conn_info.ssh_key
-                                        , remote_bind_address=(conn_info.db_host, conn_info.db_port))
-            server.start()
-            conn_info.db_host = '127.0.0.1'
-            conn_info.db_port = server.local_bind_port
-            return_obj = func(conn_info, *args)
-            server.close()
-            return return_obj
+            if conn_info.ssh_local_bind_port > 0:
+                conn_info.db_host = conn_info.original_db_host
+                conn_info.db_port = conn_info.original_db_port
+            else:
+                conn_info.original_db_host = conn_info.db_host
+                conn_info.original_db_port = conn_info.db_port
+
+            with SSHTunnelForwarder(ssh_address_or_host=(conn_info.ssh_host, conn_info.ssh_port)
+                                    , ssh_username=conn_info.ssh_user
+                                    , ssh_pkey=conn_info.ssh_key
+                                    , remote_bind_address=(conn_info.db_host, conn_info.db_port)
+            ) as tunnel:
+                conn_info.db_host = '127.0.0.1'
+                conn_info.db_port = tunnel.local_bind_port
+                conn_info.ssh_local_bind_port = tunnel.local_bind_port
+                return_obj = func(conn_info, *args)
+                return return_obj
         else:
             return func(conn_info, *args)
 
@@ -40,19 +47,23 @@ def ssh_control_mysql(func):
 def ssh_control_postgre(func):
     def wrapper(conn_info, *args):
         if conn_info.use_ssh is True:
-            try:
-                server = SSHTunnelForwarder(ssh_address_or_host=(conn_info.ssh_host, conn_info.ssh_port)
-                                            , ssh_username=conn_info.ssh_user
-                                            , ssh_pkey=conn_info.ssh_key
-                                            , remote_bind_address=(conn_info.db_host, int(conn_info.db_port)))
-                server.start()
+            if conn_info.ssh_local_bind_port > 0:
+                conn_info.db_host = conn_info.original_db_host
+                conn_info.db_port = conn_info.original_db_port
+            else:
+                conn_info.original_db_host = conn_info.db_host
+                conn_info.original_db_port = conn_info.db_port
+
+            with SSHTunnelForwarder(ssh_address_or_host=(conn_info.ssh_host, conn_info.ssh_port)
+                                    , ssh_username=conn_info.ssh_user
+                                    , ssh_pkey=conn_info.ssh_key
+                                    , remote_bind_address=(conn_info.db_host, int(conn_info.db_port))
+            ) as tunnel:
                 conn_info.db_host = '127.0.0.1'
-                conn_info.db_port = server.local_bind_port
+                conn_info.db_port = tunnel.local_bind_port
+                conn_info.ssh_local_bind_port = tunnel.local_bind_port
                 return_obj = func(conn_info, *args)
-                server.close()
                 return return_obj
-            except Exception:
-                raise
         else:
             return func(conn_info, *args)
 
@@ -64,13 +75,16 @@ class DatabaseConnInfo:
     def __init__(self, ssh_key_path=None):
         self.db_name = None
         self.db_host = None
-        self.db_port = None
+        self.db_port = 0
         self.db_username = None
         self.db_password = None
         self.use_ssh = False
         self.ssh_host = None
-        self.ssh_port = 22
+        self.ssh_port = 0
         self.ssh_user = None
+        self.ssh_local_bind_port = 0
+        self.original_db_host = '' # Not used outside of this. Internal tracking purposes
+        self.original_db_port = 0 # Not used outside of this. Internal tracking purposes
         if ssh_key_path is not None:
             self.ssh_key = paramiko.RSAKey.from_private_key_file(ssh_key_path)
 
@@ -125,7 +139,7 @@ class MySql:
     ''' All methods related to MySQL are stored in this class. '''
 
     @staticmethod
-    def connect_to_db(db_conn_info):
+    def connect_to_db(db_conn_info: DatabaseConnInfo):
         ''' Pass in the connection object(class) for this module and it returns a connection. '''
         attempt = 0
         retry_limit = 3
@@ -149,7 +163,7 @@ class MySql:
 
     @staticmethod
     @ssh_control_mysql
-    def execute_query(conn_info, script):
+    def execute_query(conn_info: DatabaseConnInfo, script):
         ''' Pass in the connection object(class) and the script to be executed. This method does not retrieve any results. '''
         conn = MySql.connect_to_db(conn_info)
         cursor = conn.cursor()
@@ -159,7 +173,7 @@ class MySql:
 
     @staticmethod
     @ssh_control_mysql
-    def execute_queries(conn_info, script_list):
+    def execute_queries(conn_info: DatabaseConnInfo, script_list):
         ''' Pass in the connection object(class) and the list of scripts to be executed. This method does not retrieve any results. '''
         conn = MySql.connect_to_db(conn_info)
         cursor = conn.cursor()
@@ -170,7 +184,7 @@ class MySql:
 
     @staticmethod
     @ssh_control_mysql
-    def execute_query_return_results(conn_info, script):
+    def execute_query_return_results(conn_info: DatabaseConnInfo, script):
         ''' Pass in the connection object(class) and the script to be executed. This method retrieves all results from the query. '''
         conn = MySql.connect_to_db(conn_info)
         cursor = conn.cursor()
@@ -186,7 +200,7 @@ class PostGre:
     ''' All methods related to PostGre SQL are stored here. '''
 
     @staticmethod
-    def connect_to_db(conn_info):
+    def connect_to_db(conn_info: DatabaseConnInfo):
         ''' Pass in the connection object(class) for this module and it returns a connection. '''
         conn_str = f'''dbname={conn_info.db_name}
                         host={conn_info.db_host}
@@ -210,7 +224,7 @@ class PostGre:
 
     @staticmethod
     @ssh_control_postgre
-    def execute_query(conn_info, script):
+    def execute_query(conn_info: DatabaseConnInfo, script):
         ''' Pass in the connection object(class) and the script to be executed. This method does not retrieve any results. '''
         conn = PostGre.connect_to_db(conn_info)
         cursor = conn.cursor()
@@ -221,7 +235,7 @@ class PostGre:
 
     @staticmethod
     @ssh_control_postgre
-    def execute_query_return_results(conn_info, script):
+    def execute_query_return_results(conn_info: DatabaseConnInfo, script):
         ''' Pass in the connection object(class) and the script to be executed. This method retrieves all results from the query. '''
         conn = PostGre.connect_to_db(conn_info)
         cursor = conn.cursor()

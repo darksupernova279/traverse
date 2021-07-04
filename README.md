@@ -128,6 +128,7 @@ __________________________________________________________________________
                 ],
     4.3 Save. Now everytime you run debug it will pass those parameters to traverse.py as if you entered them on the terminal/console.
 
+5. Pylint cannot resolve importing your modules. This is because to make Python 'see' a particular folder as a "module" you need to add an __init__.py file into the directory. This file can be empty. You can reference the core / driver and product folders as examples. They all contain an __init__.py file. 
 __________________________________________________________________________
 ######** Prepare Your Own Test **######
 
