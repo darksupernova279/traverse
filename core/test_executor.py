@@ -95,7 +95,7 @@ class Executor:
         # Try clean up driver, if this works then there was a driver, if not then driver probably not used in the test.
             try:
                 init_test_class.driver.quit_the_driver()
-            finally:
+            except AttributeError:
                 print('Info: No driver found in Test')
 
 
