@@ -1,7 +1,7 @@
 ''' This module will control all initial setup for tests. The profiler runs before the execution of tests. '''
-
+import platform as pc_platform
 import os
-from core.core_details      import TestDefinition
+from core.core_models      import TestDefinition
 from utilities.json_helper  import LoadJson
 
 
@@ -36,7 +36,7 @@ class Profiler:
         capabilities = tests_json['capabilities']
         tests = tests_json['tests']
 
-        # Create the tuple
+        # Create the list
         cartesian = []
 
         # If capability is -1, then this is a non UI related test, it means driver will not be called
@@ -44,7 +44,7 @@ class Profiler:
             capabilities = ['Not Applicable']
 
         # Define the function specifically to wrap the logic of setting the test definition
-        def set_test_definition(test, cap, platform, config_title=None, config_value=None):
+        def set_test_definition(test, cap, platform, config_title=None, config_value=None, live_safe=False):
             ''' Created just for this task, to wrap the logic and prevent duplicate code. '''
             test_def = TestDefinition() # Initialise our test definition
             pack, suite, testname = test # Unpack the array into independent variables
@@ -57,14 +57,13 @@ class Profiler:
             test_def.platform = platform
             test_def.test_config_title = config_title
             test_def.test_config_value = config_value
-            if config_title == 'productionSafe':
-                if config_value is True:
-                    test_def.production_safe = True
+            if live_safe is True:
+                test_def.production_safe = True
 
-                test_def.test_config_title = ''
-                test_def.test_config_value = ''
-
-            test_def.screenshot_dir = self.t_config.test_result_dir + '\\' + pack + '\\' + suite + '\\'
+            if pc_platform.system() == 'Windows':
+                test_def.screenshot_dir = self.t_config.test_result_dir + '\\' + pack + '\\' + suite + '\\'
+            else:
+                test_def.screenshot_dir = self.t_config.test_result_dir + '/' + pack + '/' + suite + '/'
 
             return test_def
 
@@ -72,7 +71,11 @@ class Profiler:
         # Now for main loops to create our cartesian of test definitions
         for cap in capabilities:
             for test in tests:
-                test_config_path = self.t_config.tests_folder + test[0] + '\\' + test[1] + '.json'
+                if pc_platform.system() == 'Windows':
+                    test_config_path = self.t_config.tests_folder + test[0] + '\\' + test[1] + '.json'
+                else:
+                    test_config_path = self.t_config.tests_folder + test[0] + '/' + test[1] + '.json'
+
                 if os.path.exists(test_config_path):
                     # Load the test config json if exists
                     test_configs = LoadJson.using_filepath(test_config_path)
@@ -83,16 +86,22 @@ class Profiler:
 
                     # Attach each config to each test, making the cartesian bigger
                     for key, values in test_configs.items():
+                        live_safe = False
                         if key == 'productionSafe':
-                            if len(test_configs) == 1:
-                                test_def = set_test_definition(test, cap, platform, key, values)
+                            if test_configs[key] is True:
+                                live_safe = True
+
+                            if len(test_configs.items()) == 1:
+                                test_def = set_test_definition(test, cap, platform, '', '', live_safe)
                                 cartesian.append(test_def)
-                        else:
-                            for value in values:
-                                config_title = str(key)
-                                config_value = str(value)
-                                test_def = set_test_definition(test, cap, platform, config_title, config_value)
-                                cartesian.append(test_def)
+
+                            continue
+
+                        for value in values:
+                            config_title = str(key)
+                            config_value = str(value)
+                            test_def = set_test_definition(test, cap, platform, config_title, config_value, live_safe)
+                            cartesian.append(test_def)
 
                 else:
                     test_def = set_test_definition(test, cap, platform)

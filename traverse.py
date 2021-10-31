@@ -1,6 +1,7 @@
 ''' The main file to begin execution of the automation.
 It all starts with traverse.py, from this file, we pass it arguments, and it then takes care of the rest.  '''
 import os
+import platform
 import sys
 import shutil
 import argparse
@@ -47,12 +48,18 @@ class TraverseConfig:
     ''' Loads the traverse_config.json file and its values for the app to use. '''
     def __init__(self, config_name=''):
         if config_name == '':
-            self.tests_folder = '\\tests\\'
+            if platform.system() == 'Windows':
+                self.tests_folder = '\\tests\\'
+                self.reporting_folder = '\\reports\\'
+            else:
+                self.tests_folder = '/tests/'
+                self.reporting_folder = '/reports/'
+
             self.test_plan_name = 'traverse_test'
             self.parallel_tests = 0
+            self.test_retries = 1
             self.debug_enabled = False
             self.environment = 'dev'
-            self.reporting_folder = '\\reports\\'
             self.reporting_delivery_type = 'cmd' # Options are 'html' OR 'cmd' OR 'email'
             self.reporting_on_the_go = True
             self.reporting_nuke_reports = False
@@ -64,11 +71,15 @@ class TraverseConfig:
             self.reporting_email_smtp_port = 465
             self.reporting_email_subject = ''
         else:
-            self._traverse_config = LoadJson.using_filepath(CURRENT_DIR + '\\' + config_name + '.json')
+            if platform.system() == 'Windows':
+                self._traverse_config = LoadJson.using_filepath(CURRENT_DIR + '\\' + config_name + '.json')
+            else:
+                self._traverse_config = LoadJson.using_filepath(CURRENT_DIR + '/' + config_name + '.json')
 
             self.tests_folder = CURRENT_DIR + GetJsonValue.by_key(self._traverse_config, 'testsFolder')
             self.test_plan_name = GetJsonValue.by_key(self._traverse_config, 'testPlanName')
             self.parallel_tests = GetJsonValue.by_key(self._traverse_config, 'parallelTests')
+            self.test_retries = GetJsonValue.by_key(self._traverse_config, 'testRetries')
             self.debug_enabled = GetJsonValue.by_key(self._traverse_config, 'debugEnabled')
             self.environment = GetJsonValue.by_key(self._traverse_config, 'environment')
             self.reporting_folder = CURRENT_DIR + GetJsonValue.by_key(self._traverse_config, 'reporting', 'reportsFolder')
@@ -84,7 +95,11 @@ class TraverseConfig:
             self.reporting_email_subject = GetJsonValue.by_key(self._traverse_config, 'reporting', 'emailSettings', 'emailSubject')
 
         self.tests_json_name = None
-        self.test_result_dir = self.reporting_folder + '\\' + self.test_plan_name + '_' + str(datetime.now().strftime('%Y-%m-%d_%Hh%Mm%Ss')) + '\\'
+        timestamp = str(datetime.now().strftime('%Y-%m-%d_%Hh%Mm%Ss'))
+        if platform.system() == 'Windows':
+            self.test_result_dir = f'{self.reporting_folder}\\{self.test_plan_name}_{timestamp}\\'
+        else:
+            self.test_result_dir = f'{self.reporting_folder}/{self.test_plan_name}_{timestamp}/'
 
         if self.parallel_tests < 0:
             raise Exception('Parallel tests set to less than 0!')
@@ -123,6 +138,7 @@ if __name__ == '__main__':
             'testsFolder': '\\tests\\',
             'testPlanName': 'traverse_test',
             'parallelTests': 0,
+            'testRetries': 1,
             'debugEnabled': False,
             'environment': 'dev',
             'reporting': {
@@ -141,12 +157,17 @@ if __name__ == '__main__':
                 }
             }
         }
-        if os.path.exists(CURRENT_DIR + '\\' + ARGS.generate + '.json'):
+        if platform.system() == 'Windows':
+            config_path = CURRENT_DIR + '\\' + ARGS.generate + '.json'
+        else:
+            config_path = CURRENT_DIR + '/' + ARGS.generate + '.json'
+
+        if os.path.exists(config_path):
             while True:
                 proceed = input(f'\nThere is already a {ARGS.generate} config. Do you want to overwrite?\nY/n? ')
 
                 if proceed == 'Y' or proceed == '':
-                    WriteJsonFile.write(default_config, CURRENT_DIR + '\\' + ARGS.generate + '.json')
+                    WriteJsonFile.write(default_config, config_path)
                     break
                 elif proceed == 'n':
                     sys.exit()
@@ -154,9 +175,12 @@ if __name__ == '__main__':
                     print('\nInput not recognised. Please try again!')
                     continue
         else:
-            WriteJsonFile.write(default_config, CURRENT_DIR + '\\' + ARGS.generate + '.json')
-            print('\nT Config Created!')
-            sys.exit()
+            WriteJsonFile.write(default_config, config_path)
+            if os.path.exists(config_path):
+                print('\nT Config Created!')
+                sys.exit()
+            else:
+                raise Exception('Config generation failed!')
 
     # Load the Traverse Config
     if ARGS.tconfig:

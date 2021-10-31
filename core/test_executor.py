@@ -1,17 +1,25 @@
 ''' This is the executor module. It handles anything realted to test execution, singlular, bulk and on the go reporting if its configured. '''
+import sys
 import os
+import traceback
 import importlib
+import platform
+
+from typing             import List
 from datetime           import datetime
 from multiprocessing    import Pool
+
+import pyautogui
+
 from tqdm               import tqdm
-from core.core_details  import TestStatus
+from core.core_models   import TestStatus, TestDefinition
 from core.test_reporter import ReporterTasks
 
 
 class Executor:
     ''' This is the main Executor class. By initialising this class, it accepts the traverse config and tests cartesian product.
         You can then call the run_executor method and it takes care of the rest.  '''
-    def __init__(self, traverse_config, tests_cartesian):
+    def __init__(self, traverse_config, tests_cartesian: List[TestDefinition]):
         self.t_config = traverse_config
         self.t_cartesian = tests_cartesian
 
@@ -19,23 +27,47 @@ class Executor:
     def run_executor(self):
         ''' The main method for the Executor class, by initialising the Executor class, all you would do to execute your
             tests, is call this method, and the tests will all be executed. '''
-        # First we only want to execute tests with a status "Untested"
-        tests_to_run = self.get_tests_to_execute()
-
-        # Prepare out list to append compelted tests to
-        completed_tests = []
-
+        num_of_retries = self.t_config.test_retries
         pool = Pool(self.t_config.parallel_tests +1) # Add one, because if you set it to 0, you don't want parallel processing
+        completed_tests = []
+        incomplete_tests = []
 
-        for result in tqdm(pool.imap_unordered(self.execute_test, tests_to_run), total=len(tests_to_run)):
-            completed_tests.append(result)
-            if self.t_config.reporting_on_the_go is True:
-                ReporterTasks.report_test_via_cmd(result)
+        while num_of_retries >= 0:
+            if num_of_retries < self.t_config.test_retries:
+                print(f'\nSome tests failed. Retrying them. {num_of_retries} retries are left\n')
+
+            if len(incomplete_tests) > 0:
+                tests_to_run = incomplete_tests
+                incomplete_tests = []
+            else:
+                tests_to_run = self.t_cartesian
+
+            for result in tqdm(pool.imap_unordered(self.execute_test, tests_to_run), total=len(tests_to_run)):
+                if self.t_config.reporting_on_the_go is True:
+                    ReporterTasks.report_test_via_cmd(result)
+
+                if result.test_status == TestStatus.PASSED or result.test_status == TestStatus.BLOCKED:
+                    completed_tests.append(result)
+                else:
+                    if num_of_retries > 0:
+                        result.comments = ''
+
+                    result.test_start_time = None
+                    result.test_end_time = None
+                    incomplete_tests.append(result)
+
+            if len(incomplete_tests) <= 0:
+                break
+
+            num_of_retries = num_of_retries - 1
+
+        if len(incomplete_tests) > 0:
+            completed_tests.extend(incomplete_tests)
 
         return completed_tests
 
 
-    def execute_test(self, test_def):
+    def execute_test(self, test_def: TestDefinition):
         ''' This method will execute a test based on the test definition passed into it. This method only executes 1 test. '''
         try:
             # Start the Timer
@@ -63,7 +95,11 @@ class Executor:
 
         except AssertionError:
             test_def.test_status = TestStatus.FAILED
-            test_def.comments = test_def.comments + 'Assertion Error'
+            _, _, trace_back = sys.exc_info()
+            traceback.print_tb(trace_back) # Fixed format
+            tb_info = traceback.extract_tb(trace_back)
+            _, line, _, text = tb_info[-1]
+            test_def.comments = test_def.comments + 'Assertion error on line {} in statement {}'.format(line, text)
 
             return self.update_test_definition(test_def, start_time)
 
@@ -75,13 +111,21 @@ class Executor:
 
         except TypeError:
             test_def.test_status = TestStatus.FAILED
-            test_def.comments = test_def.comments + 'Type Error'
+            _, _, trace_back = sys.exc_info()
+            traceback.print_tb(trace_back) # Fixed format
+            tb_info = traceback.extract_tb(trace_back)
+            _, line, _, text = tb_info[-1]
+            test_def.comments = test_def.comments + 'Type error on line {} in statement {}'.format(line, text)
 
             return self.update_test_definition(test_def, start_time)
 
         except KeyError:
             test_def.test_status = TestStatus.FAILED
-            test_def.comments = test_def.comments + 'Key Error'
+            _, _, trace_back = sys.exc_info()
+            traceback.print_tb(trace_back) # Fixed format
+            tb_info = traceback.extract_tb(trace_back)
+            _, line, _, text = tb_info[-1]
+            test_def.comments = test_def.comments + 'Key error on line {} in statement {}'.format(line, text)
 
             return self.update_test_definition(test_def, start_time)
 
@@ -89,14 +133,33 @@ class Executor:
             test_def.test_status = TestStatus.FAILED
             test_def.comments = test_def.comments + str(err)
 
+            _, _, trace_back = sys.exc_info()
+            traceback.print_tb(trace_back) # Fixed format
+            tb_info = traceback.extract_tb(trace_back)
+            _, line, _, text = tb_info[-1]
+            test_def.comments = test_def.comments + 'Unhandled error on line {} in statement {}'.format(line, text)
+
             return self.update_test_definition(test_def, start_time)
 
         finally:
-        # Try clean up driver, if this works then there was a driver, if not then driver probably not used in the test.
             try:
+                try:
+                    if test_def.test_status == TestStatus.FAILED:
+                        screenshot = pyautogui.screenshot()
+
+                        if platform.system() == 'Windows':
+                            save_path = f'{test_def.screenshot_dir}\\{test_def.test_name}_error.png'
+                        else:
+                            save_path = f'{test_def.screenshot_dir}/{test_def.test_name}_error.png'
+
+                        screenshot.save(save_path)
+                except OSError:
+                    pass
+
+                # Try clean up driver, if this works then there was a driver, if not then driver probably not used in the test.
                 init_test_class.driver.quit_the_driver()
-            except AttributeError:
-                print('Info: No driver found in Test')
+            except (UnboundLocalError, AttributeError):
+                pass
 
 
     def update_test_definition(self, test_def, start_time):
@@ -105,16 +168,6 @@ class Executor:
         test_def.test_start_time = start_time
         test_def.test_end_time = end_time
         return test_def
-
-
-    def get_tests_to_execute(self):
-        ''' Currently we only want to execute tests that are set to "Untested" or "Retest". This method returned a list of test definitions. '''
-        result_list = []
-        for test in self.t_cartesian:
-            if test.test_status == TestStatus.UNTESTED or test.test_status == TestStatus.RETEST:
-                result_list.append(test)
-
-        return result_list
 
 
     def pre_test_setup(self, test_def):

@@ -1,5 +1,6 @@
 Traverse is an automation framework built from the ground up. Its focus is on scalability, adaptability and maintainability. This is a personal project of mine and I use it for multiple projects. If there are any suggestions or feature ideas I would be keen to hear about them. Note I am quite pedantic about traverse, so any contributions are indeed welcome but I want to ensure the overall project remains consistent, easy to use, maintainable and scalable. 
 
+
 __________________________________________________________________________
 ######** Directory Structure **######
 
@@ -33,6 +34,7 @@ traverse/tests
 traverse/utilities
 - Any modules, logic or code used to assist the framework, product integration or tests is stored here and imported where necessary
 
+
 __________________________________________________________________________
 ######** Setup **###### {{INCOMPLETE/UNTESTED}}
 
@@ -41,11 +43,13 @@ __________________________________________________________________________
 3. Download the traverse repo to your computer
 4. Open your CMD and navigate to the directory where traverse.py is located
 5. Run the command: pip install -r requirements.txt
+5.1 If you are on mac, you may need to run: pip3 install -r requirements.txt
+6. If you encounter failures with running the requirements and you are on mac, install postgresql using homebrew (brew install postgresql) then run "pip install -r requirements.txt" again
 
 Now traverse and its requirements are ready. We still need to configure it a bit, this is optional but preferred. 
 
 6. Open your CMD and navigate to the directory where traverse.py is located
-7. Run the command: traverse.py -G default
+7. Run the command: "python traverse.py -G default". For Mac or Linux uses you may need to appened python3 in the beginning like: "python3 traverse.py -G default"
 8. Explanation for step 7 is noted in the traverse config help area. The config we just created can now be changed to your needs. Refer to the traverse config help for details on each option. 
 9. Setup is complete. You are now ready to start using the framework. >>>###(Tutorials to be created with examples on how to use the framework.)###<<<
 
@@ -55,14 +59,11 @@ __________________________________________________________________________
 This is a required configuration file and must be located in the root directory of traverse. To create a new default traverse config follow the below:
 1. Open you CMD/Terminal program
 2. Navigate to the directory where traverse.py is located
-3. Run the command: traverse.py -G default
+3. Run the command: python traverse.py -G default
 4. This will create a new json file in the root directory called "default". You can name it whatever you like but make sure to pass the correct name when executing traverse.
 
 
 Here is a breakdown of each setting and what it does:
-
-Reports Folder
-- This is the location for the reports folder. You can change this to any directory you want. The default is "\\reports\\" which will store reports in traverse/reports
 
 Tests Folder
 - This is where tests are located. It may seem strange to want this configurable, but sometimes large integration projects with many teams will usually end up with each team managing their tests, configuring a different tests folder to point to other teams on a server can be useful when they want to quickly check the integration of a product did not break. 
@@ -73,26 +74,60 @@ Test Plan Name
 Parallel Tests
 - This number indicates how many tests you want to run in parallel. If this is set to 0, traverse will run 1 test at a time sequentially. If you set this to 3 it would execute 4 tests at the same time. 
 
+Retries
+- Set the number of times you want the framework to retry any failed tests. 
+
 Debug Enabled
 - If you enable this, traverse will only run tests in the debug.json file in the tests directory. This will not be automatically created, so copy-paste the regression.json and rename it to debug.json so you can make use of this feature. 
-
-Report Type
-- This changes what report will be used. 
-- Set it to "HTML" to have an HTML report generated and opened in your default browser once execution is complete.
-- Set is to "cmd" and the results will be shown in the console
-
-Report On The Go
-- If this is enabled, each test result will be reported to the CMD as they complete execution
-- Useful if you wish to see any failures early on without waiting for all tests to complete
-
-Nuke Reports
-- If this is enabled then every time traverse is executed, ALL reports in the "reports" folder will be deleted
-- Useful if you want to only see the last completed test run only
 
 Environment
 - Add the name of the environment you are executing against.
 - Traverse has a built in protection check so if you pass in 'production' or 'live' it will check if a test config explicitly sets a test to be production safe, if this flag is not present it will skip that test and move on. Only tests with this flag and it set to true will execute on a live environment. 
 - You can pass the config to an interface you create for your product, giving you the ability to change environment and thus change settings based on that in your product interface. 
+
+Reporting
+1. Reports Folder
+    - This is the location for the reports folder. You can change this to any directory you want. The default is "\\reports\\" which will store reports in traverse/reports
+
+2. Report Delivery Type
+    - This tells the reporter how it will serve the report. 
+    - Valid options are 'email', 'html' and 'cmd'.
+    - Email will send an email, and requires email options are filled in the traverse config (this config).
+    - Html will save an html report to the reports folder directory.
+    - Cmd will print out the entire test report in the command prompt/terminal.
+
+3. Report On The Go
+    - If this is enabled, each test result will be reported to the CMD as they complete execution
+    - Useful if you wish to see any failures early on without waiting for all tests to complete
+
+4. Nuke Reports
+    - If this is enabled then every time traverse is executed, ALL reports in the "reports" folder will be deleted
+    - Useful if you want to only see the last completed test run only
+
+5. Html Template
+    - Enter the name of the template you want to use. It looks in the folder core/html_report. 
+    - Ensure the name you provide matches the name stored in the html_report folder excluding the file extension.
+    - Leave this empty and it takes the default reporting template (report.html)
+
+6. Email Settings
+    Sender Email
+    - The email the report will be sent from
+
+    Sender Password
+    - The password for the mailing account (for the email address above)
+
+    Report Mailing List
+    - An array of email addresses to send the test report to.
+
+    Smtp Server
+    - The smtp server for the email account/provider
+
+    Smtp Port
+    - The smtp port for the email account/provider
+
+    Email Subject
+    - The subject the email will have. Accepts spaces and special characters
+
 
 __________________________________________________________________________
 ######** Useful Tips **######
@@ -129,6 +164,8 @@ __________________________________________________________________________
     4.3 Save. Now everytime you run debug it will pass those parameters to traverse.py as if you entered them on the terminal/console.
 
 5. Pylint cannot resolve importing your modules. This is because to make Python 'see' a particular folder as a "module" you need to add an __init__.py file into the directory. This file can be empty. You can reference the core / driver and product folders as examples. They all contain an __init__.py file. 
+
+
 __________________________________________________________________________
 ######** Prepare Your Own Test **######
 

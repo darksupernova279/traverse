@@ -1,4 +1,4 @@
-''' core_details is a module which holds classes realted to core features. Such as a class that holds test statuses,
+''' core_models is a module which holds classes realted to core features. Such as a class that holds test statuses,
     or the test definition. These classes are usually shared across core modules and re-used often, sometimes by other
     modules not related to core.  '''
 

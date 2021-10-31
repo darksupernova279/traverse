@@ -1,7 +1,10 @@
 tqdm==4.51.0
 webdriver_manager==3.2.2
 selenium==3.141.0
-psycopg2==2.8.6
+psycopg2==2.9.1
 paramiko==2.7.2
 sshtunnel==0.3.1
 mysql-connector-python==8.0.23
+pyautogui==0.9.52
+python-dateutil==2.8.2
+numpy==1.21.2

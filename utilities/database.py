@@ -2,6 +2,7 @@
     actions are stored here. There are classes for each type of database connection, like Postgre, or SqlLite. There is also a class called
     DatabaseOps which is realted to generic database methods that can be used universally '''
 
+from typing import List
 import warnings
 import time
 import sqlite3
@@ -94,7 +95,10 @@ class DatabaseOps:
 
     @staticmethod
     def replace_script_tokens(db_script, **tokens_n_values):
-        ''' Pass in a list of key value pairs, with keys being the token and the value being the replacement for the token. '''
+        '''
+            Pass in a list of key value pairs, this is parameters and their values as per pythons kwargs,
+            with keys being the token and the value being the replacement for the token.
+        '''
         for key, value in tokens_n_values.items():
             db_script = db_script.replace(key, value)
 
@@ -108,6 +112,33 @@ class DatabaseOps:
             result_list.append(res[0])
 
         return result_list
+
+    @staticmethod
+    def load_sql_file_with_tokens(file_path, identifier=None, **tokens_n_values):
+        '''
+            Pass in the full path to the sql file then a dictionary of tokens and their values. Returns the sql file with tokens replaced.
+            If you use an identifier for your tokens then pass in the identifier you use, for example $$user_id$$ where the $ signs are the
+            identifier, you must pass in '$$' so it is added to the start and end of the token value. Or leave blank and no identifier is assumed.
+        '''
+        file = open(file_path, 'r')
+        sql = file.read()
+        file.close()
+
+        for key, value in tokens_n_values.items():
+            if identifier is not None:
+                sql = sql.replace(f'{identifier}{key}{identifier}', str(value))
+            else:
+                sql = sql.replace(key, value)
+
+        return sql
+
+    @staticmethod
+    def load_sql_file(file_path):
+        ''' Pass in the full path to the sql file and this method returns the sql script as a string. '''
+        file = open(file_path, 'r')
+        sql = file.read()
+        file.close()
+        return sql
 
 
 class SqlLite3:
@@ -184,7 +215,7 @@ class MySql:
 
     @staticmethod
     @ssh_control_mysql
-    def execute_query_return_results(conn_info: DatabaseConnInfo, script):
+    def execute_query_return_results_raw(conn_info: DatabaseConnInfo, script) -> List:
         ''' Pass in the connection object(class) and the script to be executed. This method retrieves all results from the query. '''
         conn = MySql.connect_to_db(conn_info)
         cursor = conn.cursor()
@@ -194,6 +225,30 @@ class MySql:
             raise DatabaseReturnedNothingError
         else:
             return raw_results
+
+
+    @staticmethod
+    @ssh_control_mysql
+    def execute_query_return_results(conn_info: DatabaseConnInfo, script) -> List:
+        ''' Pass in the connection object(class) and the script to be executed. This method retrieves all results from the query. '''
+        conn = MySql.connect_to_db(conn_info)
+        cursor = conn.cursor()
+        cursor.execute(script)
+        raw_results = cursor.fetchall()
+        if raw_results is []:
+            raise DatabaseReturnedNothingError
+
+        results_final = []
+        col_names = [i[0] for i in cursor.description]
+
+        for row in raw_results:
+            new_dict = {}
+            for idx, col in enumerate(row):
+                new_dict[col_names[idx]] = col
+
+            results_final.append(new_dict)
+
+        return results_final
 
 
 class PostGre:

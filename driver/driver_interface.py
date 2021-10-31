@@ -20,7 +20,7 @@ from webdriver_manager.microsoft                import EdgeChromiumDriverManager
 from webdriver_manager.opera                    import OperaDriverManager
 
 from utilities.json_helper                      import LoadJson, GetJsonValue
-from core.core_details                          import TestDefinition
+from core.core_models                          import TestDefinition
 
 
 CURRENT_DIR = dirname(realpath(__file__))
@@ -57,6 +57,9 @@ class Hooks:
         ''' Pass in the name of the hook. This method returns 2 values, the 1st is the hook type (xpath, id, classname) and the
             2nd is the actual hook locator/value '''
         hook = self.hooks.get(hook_name)
+        if hook is None:
+            raise Exception('Hook not found!')
+
         hook_type = hook.get('type')
         hook_value = hook.get('value')
         return hook_type, hook_value
@@ -219,6 +222,13 @@ class DriverActions:
         ''' Wait until an element is enalbed or 'clickable' '''
         locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
         self.wait.until(EC.element_to_be_clickable((locate_by, hook_value)))
+        time.sleep(0.5) # Selenium does not play well with SPA's, sometimes executes too fast and interferes with UI component rendering.
+
+
+    def wait_until_element_not_clickable(self, hook_value, locate_by=False, hook_token=False):
+        ''' Wait until an element is enalbed or 'clickable' '''
+        locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
+        self.wait.until_not(EC.element_to_be_clickable((locate_by, hook_value)))
 
 
     def fill_in_field(self, input_text, hook_value, locate_by=False, hook_token=False):
@@ -228,7 +238,7 @@ class DriverActions:
         '''
         locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
         self.driver.find_element(locate_by, hook_value).send_keys(input_text)
-        time.sleep(0.5) # Selenium does not play well with SPA's, sometimes executes too fast and interferes with UI component rendering.
+        time.sleep(0.7) # Selenium does not play well with SPA's, sometimes executes too fast and interferes with UI component rendering.
 
 
     def clear_input(self, hook_value, locate_by=False, hook_token=False):
@@ -243,17 +253,45 @@ class DriverActions:
         time.sleep(0.5) # Selenium does not play well with SPA's, sometimes executes too fast and interferes with UI component rendering.
 
 
+    def does_element_exist(self, hook_value, locate_by=False, hook_token=False):
+        '''
+            This method returns true if it finds an element matching your crieteria or false if it finds nothing.
+            Useful to detect or test if an element must be hidden or not.
+        '''
+        locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
+        elem = self.driver.find_element(locate_by, hook_value)
+        if len(elem) > 0:
+            return True
+        else:
+            return False
+
+
     def get_element_dynamic_id_by_text(self, partial_id, text_to_find):
         '''
-            Returns the id number or incrementing part of the element id. That is when you pass in a partial_id,
-            this method will strip off the partial id from the id it finds. This method returns a tuple, the first value
-            is the entire id and the 2nd value is just the id without the partial part passed in.
+            Returns the id number or incrementing part of the element id. That is when you pass in a partial_id, this method will
+            strip off the partial id from the id it finds. This method returns a string of the number or dynamic id it finds with
+            your criteria. This method currently supports an element id with 1 number. If your dynamic id has multiple digits in
+            it, this will not work because it strips the numbers out of the id it finds and returns that to you.
         '''
         element = self.driver.find_element_by_xpath(f"//*[contains(@id, '{partial_id}') and contains(text(), '{text_to_find}')]")
         if isinstance(element, list) or isinstance(element, tuple):
-            return str(element[0].get_attribute('id')).replace(partial_id, '')
+            str_id = str(element[0].get_attribute('id'))
         else:
-            return str(element.get_attribute('id')).replace(partial_id, '')
+            str_id = str(element.get_attribute('id'))
+
+        return ''.join([i for i in str_id if i.isdigit()])
+
+
+    def get_elem_id_by_part_id_and_text(self, partial_id, text_to_find):
+        '''
+            Pass in a partial id and the element text. This method will return the full id of the element if finds matching your criteria.
+            If multiple elements are detected, it returns the first instance it finds.
+        '''
+        element = self.driver.find_element_by_xpath(f"//*[contains(@id, '{partial_id}') and contains(text(), '{text_to_find}')]")
+        if isinstance(element, list) or isinstance(element, tuple):
+            return str(element[0].get_attribute('id'))
+        else:
+            return str(element.get_attribute('id'))
 
 
     def select_element(self, hook_value, locate_by=False, hook_token=False):
@@ -263,7 +301,7 @@ class DriverActions:
         '''
         locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
         self.driver.find_element(locate_by, hook_value).click()
-        time.sleep(0.5) # Selenium does not play well with SPA's, sometimes executes too fast and interferes with UI component rendering.
+        time.sleep(0.6) # Selenium does not play well with SPA's, sometimes executes too fast and interferes with UI component rendering.
 
 
     def hover_over_element(self, hook_value, locate_by=False, hook_token=False):

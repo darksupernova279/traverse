@@ -10,7 +10,7 @@ import platform as PLATFORM
 from email.mime.text        import MIMEText
 from email.mime.multipart   import MIMEMultipart
 from tqdm                   import tqdm
-from core.core_details      import TestStatus, ReportDeliveryType
+from core.core_models      import TestStatus, ReportDeliveryType
 from utilities.terminal     import ColorCodes
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -66,7 +66,11 @@ class ReporterTasks:
             elif test.test_status == TestStatus.BLOCKED:
                 css_for_row = css_class_blocked
 
-            test_duration = test.test_end_time - test.test_start_time
+            if test.test_end_time is None or test.test_start_time is None:
+                test_duration = '0'
+            else:
+                test_duration = test.test_end_time - test.test_start_time
+
             html_fragment = f'''
                         <tr style="{css_for_row}">
                             <td style="padding: 2px;">{test.test_id}</td>
@@ -84,7 +88,11 @@ class ReporterTasks:
             html_combined = html_combined + html_fragment
 
         # Read/Load the template file
-        with open(CURRENT_DIR + '\\html_report\\report.html', 'r') as f_in:
+        if PLATFORM.system() == 'Windows':
+            file_loc = f'{CURRENT_DIR}\\html_report\\report.html'
+        else:
+            file_loc = f'{CURRENT_DIR}/html_report/report.html'
+        with open(file_loc, 'r') as f_in:
             f_data = f_in.read()
 
         # Replace the token with our string of html markup
@@ -107,7 +115,11 @@ class ReporterTasks:
             html_combined = html_combined + html_fragment
 
         # Read/Load the template file
-        with open(f'{CURRENT_DIR}\\html_report\\{template_name}.html', 'r') as f_in:
+        if PLATFORM.system() == 'Windows':
+            file_loc = f'{CURRENT_DIR}\\html_report\\{template_name}.html'
+        else:
+            file_loc = f'{CURRENT_DIR}/html_report/{template_name}.html'
+        with open(file_loc, 'r') as f_in:
             f_data = f_in.read()
 
         # Replace the token with our string of html markup
