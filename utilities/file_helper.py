@@ -1,11 +1,21 @@
 ''' A helper utility for managing files. '''
+import os
+import time
+
 
 class FileUtils:
     ''' Utilities to assist with file management for the operating system. '''
+
     @staticmethod
     def write_file(filepath, file):
-        ''' Writes a file to disk, given the full file path and the actual file (in memory). '''
-        with open(filepath, "wb") as f_data:
+        '''
+            Writes a file to disk, given the full file path and the actual file (in memory).
+            If the file exists then it will append your string to the end of the file.
+        '''
+        if not os.path.exists(os.path.dirname(filepath)):
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+
+        with open(filepath, "a+") as f_data:
             f_data.write(file)
 
 
@@ -36,3 +46,16 @@ class FileUtils:
                 contents = contents.replace(key, value)
 
         return contents
+
+
+    @staticmethod
+    def delete_files_by_age(dir_path, days):
+        ''' Pass in the directly path and how many days old a file must be to be deleted. '''
+        files_list = os.listdir(dir_path)
+        current_time = time.time()
+
+        for file in files_list:
+            file_path = os.path.join(dir_path, file)
+            if os.path.isfile(file_path):
+                if (current_time - os.stat(file_path).st_birthtime) > days * 86400:
+                    os.remove(file_path)

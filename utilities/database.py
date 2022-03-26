@@ -192,15 +192,30 @@ class MySql:
             else:
                 raise Exception('Unable to connect to MySQL Database. See console logs.')
 
+
     @staticmethod
     @ssh_control_mysql
-    def execute_query(conn_info: DatabaseConnInfo, script):
-        ''' Pass in the connection object(class) and the script to be executed. This method does not retrieve any results. '''
+    def execute_query(conn_info: DatabaseConnInfo, script, multi_statement=False):
+        '''
+            Executes a SQL query based on the connection properties passed in. This method does not retrieve any results.
+            If using multi-statement, be sure all your statements are terminated with a ;
+            Arguments:
+                :conn_info - A class/model for connection properties
+                :script - The string of the actual sql script to execute
+                :multi_statement - Default is False. Set to True if your SQL contains multiple statements.
+        '''
         conn = MySql.connect_to_db(conn_info)
         cursor = conn.cursor()
-        cursor.execute(script)
+
+        if multi_statement is True:
+            script_list = [s for s in str(script).replace('\n', ' ').split(';') if s and s != ' ']
+            MySql.execute_queries(conn_info, script_list)
+        else:
+            cursor.execute(script, multi=multi_statement)
+
         conn.commit()
         return True
+
 
     @staticmethod
     @ssh_control_mysql
@@ -213,10 +228,14 @@ class MySql:
             conn.commit()
         return True
 
+
     @staticmethod
     @ssh_control_mysql
     def execute_query_return_results_raw(conn_info: DatabaseConnInfo, script) -> List:
-        ''' Pass in the connection object(class) and the script to be executed. This method retrieves all results from the query. '''
+        '''
+            Pass in the connection object(class) and the script to be executed. This method retrieves all results from the query.
+            The list returned is raw so you cannot reference data via the column name. For this use the method 'execute_query_return_results'
+        '''
         conn = MySql.connect_to_db(conn_info)
         cursor = conn.cursor()
         cursor.execute(script)
@@ -230,7 +249,10 @@ class MySql:
     @staticmethod
     @ssh_control_mysql
     def execute_query_return_results(conn_info: DatabaseConnInfo, script) -> List:
-        ''' Pass in the connection object(class) and the script to be executed. This method retrieves all results from the query. '''
+        '''
+            Pass in the connection object(class) and the script to be executed. This method retrieves all results from the query and returns
+            it as a list of dictionaries. This way you can reference the result set using column names.
+        '''
         conn = MySql.connect_to_db(conn_info)
         cursor = conn.cursor()
         cursor.execute(script)
@@ -290,15 +312,42 @@ class PostGre:
 
     @staticmethod
     @ssh_control_postgre
-    def execute_query_return_results(conn_info: DatabaseConnInfo, script):
+    def execute_query_return_results_raw(conn_info: DatabaseConnInfo, script):
         ''' Pass in the connection object(class) and the script to be executed. This method retrieves all results from the query. '''
         conn = PostGre.connect_to_db(conn_info)
         cursor = conn.cursor()
         cursor.execute(script)
-        results = cursor.fetchall()
-        if results is []:
-            conn.close()
+        raw_results = cursor.fetchall()
+        conn.close()
+        if raw_results is []:
             raise DatabaseReturnedNothingError
         else:
-            conn.close()
-            return results
+            return raw_results
+
+
+    @staticmethod
+    @ssh_control_mysql
+    def execute_query_return_results(conn_info: DatabaseConnInfo, script) -> List:
+        '''
+            Pass in the connection object(class) and the script to be executed. This method retrieves all results from the query and returns
+            it as a list of dictionaries. This way you can reference the result set using column names.
+        '''
+        conn = PostGre.connect_to_db(conn_info)
+        cursor = conn.cursor()
+        cursor.execute(script)
+        results = cursor.fetchall()
+        conn.close()
+        if results is []:
+            raise DatabaseReturnedNothingError
+
+        results_final = []
+        col_names = [i[0] for i in cursor.description]
+
+        for row in results:
+            new_dict = {}
+            for idx, col in enumerate(row):
+                new_dict[col_names[idx]] = col
+
+            results_final.append(new_dict)
+
+        return results_final

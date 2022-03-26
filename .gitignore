@@ -1,8 +1,10 @@
 .vscode/
 .vs/
 __pycache__
-reports/
+/reports
+/logs
 *.log
-/*.json
 tests/*.json
-!tests/regression.json
+/*.json
+!product/advertise_purple/config/users.json
+product/advertise_purple/config/*.json

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Traverse Report</title>
+    </head>
+    <body style="font-family: Arial, Helvetica, sans-serif;">
+        <h2>Test report for test run $$test_plan_name$$</h2>
+        <br>
+        <table style="width:100%; border: 2px solid black; text-align: center; border-collapse:collapse;" border="1" id="resultsTable">
+            <tr>
+                <td colspan=6 style="font-size: large; font-weight: bold;">Summary</td>
+            </tr>
+            <tr style="padding: 2px;">
+                <th style="padding: 4px;">Environment</th>
+                <th style="padding: 4px;">Total Tests Executed</th>
+                <th style="padding: 4px;">Tests Passed</th>
+                <th style="padding: 4px;">Tests Failed</th>
+                <th style="padding: 4px;">Tests Skipped/Untested</th>
+                <th style="padding: 4px;">Tests Blocked</th>
+                <th style="padding: 4px;">Total Runtime</th>
+            </tr>
+            $$summary_rows$$
+        </table>
+        <br>
+        <table style="width:100%; border: 2px solid black; text-align: center; border-collapse:collapse;" border="1" id="resultsTable">
+            <tr style="padding: 2px;">
+                <th style="padding: 4px;">ID</th>
+                <th style="padding: 4px;">Test Pack</th>
+                <th style="padding: 4px;">Test Suite</th>
+                <th style="padding: 4px;">Test Name</th>
+                <th style="padding: 4px;">Platform</th>
+                <th style="padding: 4px;">Capability</th>
+                <th style="padding: 4px;">Test Configuration</th>
+                <th style="padding: 4px;">Test Status</th>
+                <th style="padding: 4px;">Test Duration</th>
+                <th style="padding: 4px;">Comments</th>
+            </tr>
+            $$data_rows$$
+        </table>
+    </body>
+</html>
