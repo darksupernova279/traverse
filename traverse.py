@@ -68,7 +68,7 @@ TEST_JSON_FILE = """
     "testConfigurations": {
         "config1": [0]
     },
-    "excludedEnvironments": ['live']
+    "excludedEnvironments": ["live"]
 }
 """
 

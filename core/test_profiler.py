@@ -1,4 +1,5 @@
 ''' This module will control all initial setup for tests. The profiler runs before the execution of tests. '''
+from json import JSONDecodeError
 import platform
 import os
 import sys
@@ -137,7 +138,10 @@ class Profiler:
                     screenshot_dir = f'{self.trav_con.testrun_result_dir}/{test_item[0]}/{test_item[1]}'
 
                 if os.path.exists(test_config_path):
-                    test_config_json = LoadJson.using_filepath(test_config_path)
+                    try:
+                        test_config_json = LoadJson.using_filepath(test_config_path)
+                    except JSONDecodeError:
+                        raise Exception(f'Error loading the test json file: {test_config_path}. Double check the integrity of this file.')
 
                     ## Attempt to load json values from test config(json) file
                     try:
