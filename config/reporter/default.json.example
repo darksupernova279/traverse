@@ -1,0 +1,20 @@
+{
+    "reportsFolder": "",
+    "reportMethods": ["email", "html", "cmd"],
+    "htmlTemplate": "",
+    "emailSettings": {
+        "senderEmail": "",
+        "senderPassword": "",
+        "mailingList": [""],
+        "smtpServer": "smtp.gmail.com",
+        "smtpPort": 465,
+        "emailSubject": ""
+    },
+    "onFailure": {
+        "emailReport": true,
+        "mailingList": [""]
+    },
+    "reportHistory": {
+        "daysToKeep": 1
+    }
+}

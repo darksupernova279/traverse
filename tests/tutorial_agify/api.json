@@ -1,0 +1,7 @@
+
+{
+    "testConfigurations": {
+        "name": ["John", "Mary", "Travis", "Scott", "Michael"]
+    },
+    "excludedEnvironments": ["live"]
+}

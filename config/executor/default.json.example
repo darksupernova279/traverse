@@ -1,0 +1,9 @@
+{
+    "testsFolder": "",
+    "parallelTests": 0,
+    "testRetries": 0,
+    "debugEnabled": false,
+    "testResultUpdates": true,
+    "liveEnvironmentName": "live",
+    "environmentName": "dev"
+}

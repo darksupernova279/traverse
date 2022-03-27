@@ -1,5 +1,5 @@
 {
     "driverName": "Selenium",
-    "capabilityDir": "\\capabilities",
+    "capabilityDir": "capabilities",
     "maxWindowDefault": true
 }

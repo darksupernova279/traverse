@@ -1,0 +1,10 @@
+{
+    "testRunName": "Test Run - Functional",
+    "loggerConfig": "default",
+    "reporterConfig": "default",
+    "platform": "desktop",
+    "capabilities": ["chrome"],
+    "tests": [
+        ["test_pack", "test_suite", "test_case"]
+    ]
+}

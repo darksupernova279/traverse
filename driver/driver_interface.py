@@ -2,6 +2,7 @@
     interact with this module directly instead of a specific driver, this gives us the option to use other drivers and not just selenium, or
     if we change from selenium to another driver, our tests will not need to change, since we reference this interface and not selenium directly.'''
 
+import platform
 import time
 import os
 from os.path                                    import realpath, dirname
@@ -50,7 +51,10 @@ class Hooks:
     ''' This class is used to control, read and provide access to the hooks provided in a json file. The json file must follow a particular
         structure for it to be compatible with this hook class. You can see an example json file already in the directory /driver/hooks '''
     def __init__(self, hook_file_name):
-        self.hook_file = f'{CURRENT_DIR}\\hooks\\{hook_file_name}.json'
+        if platform.system() == 'Windows':
+            self.hook_file = f'{CURRENT_DIR}\\hooks\\{hook_file_name}.json'
+        else:
+            self.hook_file = f'{CURRENT_DIR}/hooks/{hook_file_name}.json'
         self.hooks = LoadJson.using_filepath(self.hook_file)
 
     def get_hook(self, hook_name):
@@ -77,34 +81,56 @@ class DriverHelper:
     ''' This class holds all methods related to assisting the driver actions class by keeping any setup and config related work out of the
         actions class. '''
     def __init__(self):
-        self.driver_config = LoadJson.using_filepath(CURRENT_DIR + '\\driver_config.json')
+        if platform.system() == 'Windows':
+            self.driver_config = LoadJson.using_filepath(CURRENT_DIR + '\\driver_config.json')
+        else:
+            self.driver_config = LoadJson.using_filepath(CURRENT_DIR + '/driver_config.json')
 
         self.driver_name = GetJsonValue.by_key(self.driver_config, 'driverName')
         self.capability_dir = GetJsonValue.by_key(self.driver_config, 'capabilityDir')
         self.max_window_default = GetJsonValue.by_key(self.driver_config, 'maxWindowDefault')
 
 
-    def load_capability(self, platform, capability):
+    def load_capability(self, platform_name, capability):
         ''' Pass in the platform and the capability name. This method returns a dictionary object of the capability. It will first determine
             what driver to use, for example selenium, then it will load the capability according to that driver. '''
-        if not os.path.exists(f'{CURRENT_DIR}\\{self.capability_dir}\\{platform}\\{capability}.json'):
-            raise Exception('Capability Not Found!')
+        if platform.system() == 'Windows':
+            if not os.path.exists(f'{CURRENT_DIR}\\{self.capability_dir}\\{platform_name}\\{capability}.json'):
+                raise Exception('Capability Not Found!')
 
+            else:
+                cap_file = LoadJson.using_filepath(f'{CURRENT_DIR}\\{self.capability_dir}\\{platform_name}\\{capability}.json')
+                caps = {
+                    'seleniumVersion': __version__,
+                    'deviceName': cap_file['deviceName'],
+                    'browserName': cap_file['browserName'],
+                    'platformVersion': cap_file['platformVersion'],
+                    'platformName': cap_file['platformName'],
+                    'rotatable': cap_file['rotatable'],
+                    'deviceOrientation': cap_file['deviceOrientation'],
+                    'privateDevicesOnly': False,
+                    'phoneOnly': False,
+                    'tabletOnly': False
+                }
         else:
-            cap_file = LoadJson.using_filepath(f'{CURRENT_DIR}\\{self.capability_dir}\\{platform}\\{capability}.json')
-            caps = {
-                'seleniumVersion': __version__,
-                'deviceName': cap_file['deviceName'],
-                'browserName': cap_file['browserName'],
-                'platformVersion': cap_file['platformVersion'],
-                'platformName': cap_file['platformName'],
-                'rotatable': cap_file['rotatable'],
-                'deviceOrientation': cap_file['deviceOrientation'],
-                'privateDevicesOnly': False,
-                'phoneOnly': False,
-                'tabletOnly': False
-            }
-            return caps
+            if not os.path.exists(f'{CURRENT_DIR}/{self.capability_dir}/{platform_name}/{capability}.json'):
+                raise Exception('Capability Not Found!')
+
+            else:
+                cap_file = LoadJson.using_filepath(f'{CURRENT_DIR}/{self.capability_dir}/{platform_name}/{capability}.json')
+                caps = {
+                    'seleniumVersion': __version__,
+                    'deviceName': cap_file['deviceName'],
+                    'browserName': cap_file['browserName'],
+                    'platformVersion': cap_file['platformVersion'],
+                    'platformName': cap_file['platformName'],
+                    'rotatable': cap_file['rotatable'],
+                    'deviceOrientation': cap_file['deviceOrientation'],
+                    'privateDevicesOnly': False,
+                    'phoneOnly': False,
+                    'tabletOnly': False
+                }
+        return caps
 
 
     def load_driver(self, capabilities):
@@ -302,6 +328,39 @@ class DriverActions:
         locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
         self.driver.find_element(locate_by, hook_value).click()
         time.sleep(0.6) # Selenium does not play well with SPA's, sometimes executes too fast and interferes with UI component rendering.
+
+
+    def select_element_in_list_by_text(self, text, hook_value, locate_by=False, hook_token=False):
+        '''
+            Pass in the text you want to find in the list and then the hook_value. This method gets the elements in a list format and one by one
+            will look for any that contain the text you pass in. It selects the first one it finds.
+        '''
+        locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
+        elements = self.driver.find_elements(by=locate_by, value=hook_value)
+
+        for element in elements:
+            if element.text == text:
+                element.click()
+                time.sleep(0.6)
+                return
+
+        raise Exception(f'Unable to select element in list by the text: {text}')
+
+    def get_elements_count_in_list(self, hook_value, locate_by=False, hook_token=False):
+        '''
+            Pass in the list you want to get the count of it's elements and then the hook_value. This method gets the number 
+            of elements in a list format 
+        '''
+        locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
+        elements = self.driver.find_elements(by=locate_by, value=hook_value)
+        
+        return len(elements)
+
+    def get_element_attribute(self, attribute:str, hook_value, locate_by=False, hook_token=False):
+        ''' This simply gets an elements attribute value by the attribute name you pass in. '''
+        locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
+        attribute_value = self.driver.find_element(locate_by, hook_value).get_attribute(attribute)
+        return attribute_value
 
 
     def hover_over_element(self, hook_value, locate_by=False, hook_token=False):

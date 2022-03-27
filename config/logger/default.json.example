@@ -1,0 +1,23 @@
+{
+    "logsFolder": "",
+    "logLevels": ["error", "alert", "warning", "debug"],
+    "logMethods": ["email", "slack", "file", "console"],
+    "customLoggerConfig": "",
+    "emailSettings": {
+        "senderEmail": "",
+        "senderPassword": "",
+        "mailingList": [""],
+        "smtpServer": "smtp.gmail.com",
+        "smtpPort": 465
+    },
+    "logHistory": {
+        "daysToKeep": 5
+    },
+    "slack": {
+        "bearerToken": "",
+        "channels": [""],
+        "userMentions": [
+            ""
+        ]
+    }
+}
