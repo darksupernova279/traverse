@@ -1,0 +1,14 @@
+{
+    "signIn_emailField": {
+        "type": "xpath",
+        "value": "//input[@data-placeholder='Email*']"
+    },
+    "signIn_passwordField": {
+        "type": "xpath",
+        "value": "//input[@data-placeholder='Password*']"
+    },
+    "signId_logo": {
+        "type": "id",
+        "value": "logo-high"
+    }
+}
