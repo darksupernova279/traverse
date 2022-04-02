@@ -1,0 +1,7 @@
+
+{
+    "testConfigurations": {
+        "config1": [0]
+    },
+    "excludedEnvironments": ["live"]
+}
