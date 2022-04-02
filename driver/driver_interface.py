@@ -231,28 +231,48 @@ class DriverActions:
 
 
     def wait_for_element_visible(self, hook_value, locate_by=False, hook_token=False):
-        ''' Pass in the locate by type, like the xpath or id, and pass in the element locator, which will be the actual id or xpath '''
+        '''
+            This will wait for an element to be visible.
+            hook_value = the value of the hook it self like an xpath or the actual ID of an element.
+            locate_by = the type of hook it is, this will be an XPath or an ID. Please use/import the
+            class "LocateBy" located in the driver_interface as it contains the correct list of locate_by possibilities.
+        '''
         locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
         self.wait.until(EC.visibility_of_element_located((locate_by, hook_value)))
         time.sleep(0.5) # Selenium does not play well with SPA's, sometimes executes too fast and interferes with UI component rendering.
 
 
     def wait_until_element_invisible(self, hook_value, locate_by=False, hook_token=False):
-        ''' Wait for an element to become invisible. '''
+        '''
+            Wait for an element to become invisible.
+            hook_value = the value of the hook it self like an xpath or the actual ID of an element.
+            locate_by = the type of hook it is, this will be an XPath or an ID. Please use/import the
+            class "LocateBy" located in the driver_interface as it contains the correct list of locate_by possibilities.
+        '''
         locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
         self.wait.until(EC.invisibility_of_element((locate_by, hook_value)))
         time.sleep(0.5) # Selenium does not play well with SPA's, sometimes executes too fast and interferes with UI component rendering.
 
 
     def wait_until_element_clickable(self, hook_value, locate_by=False, hook_token=False):
-        ''' Wait until an element is enalbed or 'clickable' '''
+        '''
+            Wait until an element is enalbed or 'clickable'
+            hook_value = the value of the hook it self like an xpath or the actual ID of an element.
+            locate_by = the type of hook it is, this will be an XPath or an ID. Please use/import the
+            class "LocateBy" located in the driver_interface as it contains the correct list of locate_by possibilities.
+        '''
         locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
         self.wait.until(EC.element_to_be_clickable((locate_by, hook_value)))
         time.sleep(0.5) # Selenium does not play well with SPA's, sometimes executes too fast and interferes with UI component rendering.
 
 
     def wait_until_element_not_clickable(self, hook_value, locate_by=False, hook_token=False):
-        ''' Wait until an element is enalbed or 'clickable' '''
+        '''
+            Wait until an element is disabled or NOT 'clickable'
+            hook_value = the value of the hook it self like an xpath or the actual ID of an element.
+            locate_by = the type of hook it is, this will be an XPath or an ID. Please use/import the
+            class "LocateBy" located in the driver_interface as it contains the correct list of locate_by possibilities.
+        '''
         locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
         self.wait.until_not(EC.element_to_be_clickable((locate_by, hook_value)))
 
@@ -324,6 +344,9 @@ class DriverActions:
         '''
             Simulate a user select on the given locator. Pass in what to locate the element by, the actual element locator (id or xpath etc).
             If you have a token in the hook file then pass in the value you want the token replaced with using the hook_token parameter.
+            hook_value = the value of the hook it self like an xpath or the actual ID of an element.
+            locate_by = the type of hook it is, this will be an XPath or an ID. Please use/import the
+            class "LocateBy" located in the driver_interface as it contains the correct list of locate_by possibilities.
         '''
         locate_by, hook_value = self._check_locate_by(hook_value, locate_by, hook_token)
         self.driver.find_element(locate_by, hook_value).click()

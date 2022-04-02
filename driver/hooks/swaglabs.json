@@ -1,0 +1,18 @@
+{
+    "signIn_username": {
+        "type": "id",
+        "value": "user-name"
+    },
+    "signIn_password": {
+        "type": "id",
+        "value": "password"
+    },
+    "signIn_btn": {
+        "type": "id",
+        "value": "login-button"
+    },
+    "homepage_productsHeading": {
+        "type": "xpath",
+        "value": "//span[contains(text(), 'Products')]"
+    }
+}
