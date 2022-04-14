@@ -1,0 +1,95 @@
+{
+    "signIn_username": {
+        "type": "id",
+        "value": "email"
+    },
+    "signIn_password": {
+        "type": "id",
+        "value": "password"
+    },
+    "signIn_btn": {
+        "type": "xpath",
+        "value": "//button[text()='Sign In']"
+    },
+    "dashboard": {
+        "type": "xpath",
+        "value": "//h4[text()='Dashboard']"
+    },
+
+    "dashboard_fund": {
+        "type": "xpath",
+        "value": "//p[text()='FUND']"
+    },
+    "dashboard_trade": {
+        "type": "xpath",
+        "value": "//p[text()='TRADE']"
+    },
+    "dashboard_withdraw": {
+        "type": "xpath",
+        "value": "//p[text()='WITHDRAW']"
+    },
+    "dashboard_transaction_trades": {
+        "type": "xpath",
+        "value": "//p[text()='TRADES']"
+    },
+    "dashboard_transaction_deposits": {
+        "type": "xpath",
+        "value": "//p[text()='DEPOSITS']"
+    },
+    "dashboard_transaction_withdrawals": {
+        "type": "xpath",
+        "value": "//p[text()='WITHDRAWALS']"
+    },
+    "dashboard_explore_market": {
+        "type": "xpath",
+        "value": "//h5[text()='Explore Market']"
+    },
+    "market": {
+        "type": "xpath",
+        "value": "//h6[text()='Market']"
+    },
+    "market_page": {
+        "type": "xpath",
+        "value": "//h3[text()='Bitcoin']"
+    },
+    "portfolio": {
+        "type": "xpath",
+        "value": "//h6[text()='Portfolio']"
+    },
+    "portfolio_page": {
+        "type": "xpath",
+        "value": "//h5[text()='Portfolio']"
+    },
+    "receive": {
+        "type": "xpath",
+        "value": "(//button[@type='button'])[3]"
+    },
+    "receive_popup": {
+        "type": "xpath",
+        "value": "//img[@alt='choose a coin']"
+    },
+    "send": {
+        "type": "xpath",
+        "value": "//p[text()='Send']/following-sibling::i"
+    },
+    "send_popup": {
+        "type": "xpath",
+        "value": "//span[text()='Rubix-to-Rubix transfer (Zero fees)']"
+    },
+    "settings": {
+        "type": "xpath",
+        "value": "(//li[@role='menuitem'])[2]"
+    },
+    "settings_page": {
+        "type": "xpath",
+        "value": "//li[contains(@class,'MuiButtonBase-root MuiListItem-root')]"
+    },
+    "user_menu": {
+        "type": "xpath",
+        "value": "//div[contains(@class,'MuiAvatar-root MuiAvatar-circle')]"
+    },
+    "logout": {
+        "type": "xpath",
+        "value": "(//li[@role='menuitem'])[3]"
+    }
+}

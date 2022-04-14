@@ -1,0 +1,9 @@
+{
+    "deviceName": "Samsung Galaxy S22 Ultra",
+    "deviceOrientation": "POTRAIT",
+    "rotatable": "true",
+    "browserName": "android",
+    "platformName": "Android",
+    "platformVersion": "12.0"
+
+}

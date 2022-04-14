@@ -10,8 +10,10 @@ from os.path                                    import realpath, dirname
 from selenium                                   import webdriver, __version__
 from selenium.webdriver.common.action_chains    import ActionChains
 from selenium.webdriver.common.keys             import Keys
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support                 import expected_conditions as EC
 from selenium.webdriver.support.ui              import WebDriverWait
+from appium.webdriver.appium_service            import AppiumService
 
 from webdriver_manager.chrome                   import ChromeDriverManager
 from webdriver_manager.utils                    import ChromeType
@@ -136,25 +138,31 @@ class DriverHelper:
     def load_driver(self, capabilities):
         ''' This method will load and return the driver. It depends on the capability of the test, for example it references the browser name
             in the capability file. '''
-        if capabilities['browserName'] == Browsers.CHROME:
-            driver = webdriver.Chrome(ChromeDriverManager().install())
-        elif capabilities['browserName'] == Browsers.CHROMIUM:
-            driver = webdriver.Chrome(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
-        elif capabilities['browserName'] == Browsers.FIREFOX:
-            driver = webdriver.Firefox(executable_path=GeckoDriverManager().install())
-        elif capabilities['browserName'] == Browsers.IE:
-            driver = webdriver.Ie(IEDriverManager().install())
-        elif capabilities['browserName'] == Browsers.EDGE:
-            driver = webdriver.Edge(EdgeChromiumDriverManager().install())
-        elif capabilities['browserName'] == Browsers.OPERA:
-            # If opera is not installed in its default directory, this may throw an exception, workaround is on the pip site.
-            driver = webdriver.Opera(executable_path=OperaDriverManager().install())
-        else:
-            raise Exception('Unable to identify browser to load driver, check your capability file contains the correct value for browser name.')
+        if capabilities['platformName'] == 'WINDOWS':
+            if capabilities['browserName'] == Browsers.CHROME:
+                driver = webdriver.Chrome(ChromeDriverManager().install())
+            elif capabilities['browserName'] == Browsers.CHROMIUM:
+                driver = webdriver.Chrome(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
+            elif capabilities['browserName'] == Browsers.FIREFOX:
+                driver = webdriver.Firefox(executable_path=GeckoDriverManager().install())
+            elif capabilities['browserName'] == Browsers.IE:
+                driver = webdriver.Ie(IEDriverManager().install())
+            elif capabilities['browserName'] == Browsers.EDGE:
+                driver = webdriver.Edge(EdgeChromiumDriverManager().install())
+            elif capabilities['browserName'] == Browsers.OPERA:
+                # If opera is not installed in its default directory, this may throw an exception, workaround is on the pip site.
+                driver = webdriver.Opera(executable_path=OperaDriverManager().install())
 
-        # If we set the max window to default we will automatically set the browser window to maximise on driver load
-        if self.max_window_default is True:
-            driver.maximize_window()
+            else:
+                raise Exception('Unable to identify browser to load driver, check your capability file contains the correct value for browser name.')
+
+            # If we set the max window to default we will automatically set the browser window to maximise on driver load
+            if self.max_window_default is True:
+                driver.maximize_window()
+
+        if capabilities['platformName'] == 'Android': 
+           # AppiumService().start()
+            driver = webdriver.Remote('https://shalini_ItaWko:q5c84xV3V9yawZx9giq9@hub-cloud.browserstack.com/wd/hub', capabilities)
 
         return driver
 

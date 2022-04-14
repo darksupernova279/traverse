@@ -1,8 +1,8 @@
 {
-    "deviceName": "Samsung Galaxy S7",
+    "deviceName": "A6",
     "deviceOrientation": "LANDSCAPE",
     "rotatable": "true",
     "browserName": "chrome",
     "platformName": "Android",
-    "platformVersion": ""
+    "platformVersion": "10"
 }
